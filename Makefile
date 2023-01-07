@@ -26,3 +26,19 @@ clean::
 check::
 	sbcl --noinform --disable-debugger --load test.lisp --quit
 
+
+# The procedures below are for the original author of this package.
+
+git-setup:                          # This are the upstream repositories
+	git remote rm GITLAB || true
+	git remote rm GITHUP || true
+	git remote add GITLAB git@gitlab.com:m-e-leypold/cl-simple-test.git
+	git remote add GITHUB git@github.com:m-e-leypold/cl-simple-test.git
+	git fetch GITLAB
+	git fetch GITHUB
+
+publish:                            # We only release from main
+	git push GITLAB main
+	git push GITHUB main
+	git push origin main
+
