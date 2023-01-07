@@ -28,3 +28,13 @@
   :components ((:file "simple-test")))
 
 
+(defsystem "de.m-e-leypold.cl-simple-test/tests"
+  :author "M E Leypold [elegant-weapons ( AT) m-e-leypold (DOT) de]"
+  :licence "GPL3"
+  :depends-on ("de.m-e-leypold.cl-simple-test")
+  :description "Tests and specifications for CL-SIMPLE-TEST"
+  :components ((:file "tests")))
+
+
+
+
