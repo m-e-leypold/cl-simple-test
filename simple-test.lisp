@@ -56,10 +56,10 @@
 ;;; * -- Defining tests -------------------------------------------------------------------------------------|
 
 (defparameter *tests*  '()
-  "Contains the tests (as symbols) defined with `DEFTEST'.")
+  "Contains the tests defined with `DEFTEST' (as symbols).")
 
 (defparameter *current-test*  nil
-  "Contains the currently running tests as a a symbol")
+  "Contains the currently running test as a a symbol")
 
 (defmacro deftest (name args doc &body body)
   "Define a test.
@@ -68,13 +68,13 @@
    `RUN-TESTS'.
 
    The lambda-list ARGS needs to be empty. The rationale that it needs to be given regardless
-   is that this increases the readability. A reader's eye will still see that a DEFTEST form
-   defines a procedure.
+   is that this increases the readability. A reader will register immediately that a DEFTEST
+   form defines a procedure.
 
    Every test must have a docstring DOC that describes what is tested in the test and how.
 
    Specification: See `TEST:DEFINING-TESTS' and `TEST:FAILING-ASSERTIONS-IN-TESTS'.
-                  Execute (load-tests) before.
+                  Execute (load-tests) before or load test.lisp.
 "
   (assert (not args) nil
 	  (format nil
