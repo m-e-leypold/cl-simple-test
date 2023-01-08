@@ -29,13 +29,19 @@
   (:documentation "Testing cl-simple-test")
   (:use
    :common-lisp
-   :de.m-e-leypold.cl-simple-test)
+   :de.m-e-leypold.cl-simple-test
+   :de.m-e-leypold.cl-simple-utils)
   (:export
    :run-tests-local
    :defining-tests
    :failing-assertions-in-tests))
 
 (in-package :de.m-e-leypold.cl-simple-test/tests)
+
+(inject-package-local-nickname "TEST"
+			       :de.m-e-leypold.cl-simple-test/tests
+			       :de.m-e-leypold.cl-simple-test)
+
 
 ;;; * Infrastructure for testing simple-test ----------------------------------------------------------------|
 
@@ -139,7 +145,7 @@
 ;;; ** Defining Tests ---------------------------------------------------------------------------------------|
 
 (deftest-local defining-tests ()
-    "Checks `DEFTEST'
+    "Checking `DEFTEST' -- defines tests.
 
      Specification:
 

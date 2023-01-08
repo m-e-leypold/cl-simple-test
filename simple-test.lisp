@@ -48,6 +48,11 @@
 
 (in-package :de.m-e-leypold.cl-simple-test)
 
+;;; * -- Development infrastructure -------------------------------------------------------------------------|
+
+(defun load-tests ()
+  (asdf:load-system "de.m-e-leypold.cl-simple-test/tests"))
+
 ;;; * -- Defining tests -------------------------------------------------------------------------------------|
 
 (defparameter *tests*  '()
@@ -57,6 +62,11 @@
   "Contains the currently running tests as a a symbol")
 
 (defmacro deftest (name args &body body)
+  "TODO!
+
+   Specification: See `TEST:DEFINING-TESTS' and `TEST:FAILING-ASSERTIONS-IN-TESTS'.
+                  Execute (load-tests) before.
+"
   (assert (not args) nil
 	  (format nil
 		  "Argument list in DEFTEST ~S not empty, but ~S. Must be empty when using ~a."
