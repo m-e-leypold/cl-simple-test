@@ -61,8 +61,17 @@
 (defparameter *current-test*  nil
   "Contains the currently running tests as a a symbol")
 
-(defmacro deftest (name args &body body)
-  "TODO!
+(defmacro deftest (name args doc &body body)
+  "Define a test.
+
+   Defines a test procedure bound to the symbol NAME and registers it for later execution with
+   `RUN-TESTS'.
+
+   The lambda-list ARGS needs to be empty. The rationale that it needs to be given regardless
+   is that this increases the readability. A reader's eye will still see that a DEFTEST form
+   defines a procedure.
+
+   Every test must have a docstring DOC that describes what is tested in the test and how.
 
    Specification: See `TEST:DEFINING-TESTS' and `TEST:FAILING-ASSERTIONS-IN-TESTS'.
                   Execute (load-tests) before.
@@ -73,10 +82,17 @@
 		  name
 		  args
 		  (package-name (symbol-package 'deftest))))
-  `(progn     
+
+  (assert (stringp doc) nil
+	  (format nil
+		  "No docstring in DEFTEST ~S. Docstrings are required."
+		  name))
+  `(progn
+     (setf *tests* (adjoin  (quote ,name) *tests*))
      (defun ,name ()
-       (let ((*current-test* (quote ,name))) ,@body))
-     (setf *tests* (adjoin  (quote ,name) *tests*))))
+       ,doc
+       (let ((*current-test* (quote ,name))) ,@body))))
+
 
 ;;; * -- Running tests --------------------------------------------------------------------------------------|
 

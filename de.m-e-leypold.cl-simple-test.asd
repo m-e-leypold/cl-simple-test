@@ -36,5 +36,13 @@
   :components ((:file "tests")))
 
 
+(defsystem "de.m-e-leypold.cl-simple-test/prerequisites"
+  :author "M E Leypold [elegant-weapons ( AT) m-e-leypold (DOT) de]"
+  :licence "GPL3"
+  :depends-on ("cl-ppcre" "de.m-e-leypold.cl-simple-utils")
+  :description "Just all external prerequisites"
+  :components ())
+
+
 
 

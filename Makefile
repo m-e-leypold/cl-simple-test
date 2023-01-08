@@ -18,14 +18,23 @@
 #   For altermative licensing options, see README.md
 #
 
-all::
+# The intended effect is, to load all files into the fasl cache. Checking the warnings is a side
+# effect that, since the cache is nor cleared, will go away on the second invocation.
+#
+all:: check-warnings
 
 clean::
-	rm -f *~
+	rm -f *~ *.log *.fasl
+
+CHECK-PREP = sbcl --noinform --disable-debugger \
+                  --eval '(asdf:load-system "de.m-e-leypold.cl-simple-test/prerequisites")' --quit
+LOAD       = sbcl --noinform --disable-debugger \
+                  --eval '(asdf:load-system "de.m-e-leypold.cl-simple-test/tests")' --quit
+CHECK      = sbcl --noinform --disable-debugger --load test.lisp --quit
 
 check::
-	sbcl --noinform --disable-debugger --load test.lisp --quit
-
+	$(CHECK)
+	@echo
 
 # The procedures below are for the original author of this package.
 
@@ -41,4 +50,19 @@ publish:                            # We only release from main
 	git push GITLAB main
 	git push GITHUB main
 	git push origin main
+
+
+clean-fasl-cache:
+	rm -rf $(HOME)/.cache/common-lisp
+
+check-warnings:
+	$(CHECK-PREP) >CHECK-PREP.log 2>&1
+	$(LOAD) >CHECK.log 2>&1
+	! grep -C8 -i "warn" CHECK.log  # This could be smarter
+	@echo
+	@echo "No warnings detected."
+
+stricter-check: clean-fasl-cache check-warnings
+
+check-all: check stricter-check
 

@@ -1,6 +1,6 @@
 ;;; ------------------------------------------------------------------------*- common-lisp -*-|
 ;;;
-;;;   de.m-e-leypold.cl-simple.test -- a simple testing framework for common lisp.
+;;;   de.m-e-leypold.cl-simple-test -- a simple testing framework for common lisp.
 ;;;   Copyright (C) 2022  M E Leypold
 ;;;
 ;;;   This program is free software: you can redistribute it and/or modify
@@ -67,7 +67,7 @@
   "Print a `TEST-FAILURE' instance."
 
   (print-unreadable-object (failure stream :type t)
-    (format stream ":test-name ~a :cond ~S" (test-name failure) (failed-condition failure))
+    (format stream ":test-name ~a" (test-name failure))
     (if (failed-condition failure)
 	(format stream " :cond ~S" (failed-condition failure)))
     (if (explanation failure)
@@ -86,11 +86,11 @@
 		:failed-condition (quote ,cond)))))
 
 (defun test-failure (&key failed-condition explanation)
-  	 (error 'test-failure
-		:test-name *current-test-local*
-		:failed-condition failed-condition
-		:explanation explanation))
-  
+  (error 'test-failure
+	 :test-name *current-test-local*
+	 :failed-condition failed-condition
+	 :explanation explanation))
+
 
 (defmacro deftest-local (name args docstring &body body)
   (assert (not args) nil (format nil "arguments of DEFTEST-LOCAL ~S must be empty" name))
@@ -154,6 +154,10 @@
 
      2. A function of the same name F will will be defined, containing the body given in DEFTEST and wrapped
         into a form, so that during execution of F, `*CURRENT-TEST*' is set to F.
+
+     3. The documentation string is obligatory and will be attached to the function.
+
+     If there is no documentation string given, this will result in an error at macro expansion time.
 "
   (explain "Resetting cl-simple-test.")
   (reset-all-state)
@@ -161,10 +165,12 @@
   (explain "Defining tests T1, T2, which push *CURRENT-TEST* as flags.")
 
   (deftest t1 ()
+      "t1 doc"
     (format t "~&  t1 here.~&")
     (set-flag *current-test*))
 
   (deftest t2 ()
+      "t2 doc"
     (format t "~&  t2 here.~&")
     (set-flag *current-test*))
 
@@ -175,40 +181,61 @@
   (t1)
 
   (trace-expr *flags*)
-  (assert-local (equal *flags* '(t1 t2))))
+  (assert-local (equal *flags* '(t1 t2)))
+
+  (explain "Checking docstrings.")
+
+  (assert-local (equal "t1 doc" (documentation 't1 'function)))
+  (assert-local (equal "t2 doc" (documentation 't2 'function)))
+
+  (handler-case
+
+      (macroexpand '(deftest t3 () t))
+
+    (error () )  ; that's what it the result should be.
+
+    (condition (e)
+      (test-failure
+       :explanation
+       (format nil
+	       "Expanding DEFTEST T3 should have signalled an `error' condition, instead it signalled ~S" e)))
+    (:NO-ERROR (e1 e2)
+      (declare (ignorable e1 e2))
+      (test-failure
+       :explanation "No error signalled by DEFTEST T3 supposed to trigger a failing assertion"))))
 
 ;;; ** Assertion  handling ----------------------------------------------------------------------------------|
 
 (deftest-local failing-assertions-in-tests ()
     "Checking: Errors raised by assertions in tests escape the test functions.
 
-     Specification:
+     Context: `ASSERT' signals a `CONDITION' of type `SIMPLE-ERROR' if the predicate given is not true.
 
-     `ASSERT' signals a `CONDITION' of type `SIMPLE-ERROR' if the predicate given is not true.
-
-     When invoking a test function directly, such a `SIMPLE-ERROR' will not be handled by the test function,
-     but escape from the test function.
+     Specification: When invoking a test function directly, such a `SIMPLE-ERROR' will not be handled by the
+     test function, but escape from the test function.
 "
-  
+
   (explain "Resetting cl-simple-test.")
   (reset-all-state)
 
   (explain "Defining test T1, which has a failing assertion.")
 
   (deftest t1 ()
+      ""
     (assert (= 3 (+ 1 1))))
- 
+
   (explain "Invoking this test: An error is signalled.")
 
   (handler-case (t1)
     (error () )  ; that's what it the result should be.
-    
-    (condition (e)      
+
+    (condition (e)
       (test-failure
        :explanation
        (format nil "T1 should have signalled an `error' condition, instead it signalled ~S" e)))
-    
-    (:NO-ERROR ()
+
+    (:NO-ERROR (e1 e2)
+      (declare (ignorable e1 e2))
       (test-failure
        :explanation "No error signalled by test function T1 supposed to trigger a failing assertion"))))
 
