@@ -88,14 +88,15 @@
 
 (defmacro deftest-local (name args docstring &body body)
   (assert (not args) nil (format nil "arguments of DEFTEST-LOCAL ~S must be empty" name))
-  (setf *tests-local* (adjoin name *tests-local*))
-  `(defun ,name ()
+  `(progn
+     (setf *tests-local* (adjoin (quote ,name) *tests-local*))
+     (defun ,name ()
      ,docstring
      (let ((*current-test-local* (quote ,name)))
        (format t "~&~a: Test ~S ...~%" *program-name* *current-test-local*)
        (format t "~%     ~a~%" (documentation (quote ,name) 'function))
        (progn ,@body)
-       (format t "~&~a: => OK (~S).~%" *program-name* *current-test-local*))))
+       (format t "~&~a: => OK (~S).~%" *program-name* *current-test-local*)))))
 
 (defun run-tests-local ()
   (format t "~&~%~a: Will run ~a tests: ~S.~%"

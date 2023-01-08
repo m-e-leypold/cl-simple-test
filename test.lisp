@@ -29,13 +29,13 @@
 
 ;;; * Define sandbox for tests ------------------------------------------------------------------------------|
 
-(defpackage :de.m-e-leypold.cl-simple-test/test
+(defpackage :de.m-e-leypold.cl-simple-test/run-tests
   (:documentation "Testing cl-simple-test")
   (:use
    :common-lisp
    :de.m-e-leypold.cl-simple-test/tests))
 
-(in-package :de.m-e-leypold.cl-simple-test/test)
+(in-package :de.m-e-leypold.cl-simple-test/run-tests)
 
 ;;; * Actually executing the tests --------------------------------------------------------------------------|
 
