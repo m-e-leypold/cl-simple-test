@@ -31,9 +31,6 @@
   (:documentation "A simple test framework working with ```ASSERT'''")
   (:use :common-lisp :cl-ppcre)
   (:export
-   :*failed*
-   :*drop-into-debugger*
-   :*re-signal*
    :assert-condition
    :assert-no-condition
    :assert-and-capture-condition
@@ -44,6 +41,13 @@
    :*current-test*
    :reset-test-definitions
    :reset-run-state
+   :run-tests
+   :*failed*
+   :*passed*
+   :*signal-after-run-tests*
+   :*drop-into-debugger*
+   :*re-signal*
+
    ))
 
 (in-package :de.m-e-leypold.cl-simple-test)
@@ -96,6 +100,101 @@
 
 ;;; * -- Running tests --------------------------------------------------------------------------------------|
 
+(defparameter *failed* '()
+  "Contains the failed tests after running the tests with ```RUN-TESTS'''")
+(defparameter *passed* '()
+  "Contains the passed tests after running the tests with ```RUN-TESTS'''")
+
+(defvar *drop-into-debugger* nil
+  "
+  If T, ```RUN-TEST''' will let a failing test drop into the debugger, otherwise
+  the condition will be handeled after printing the error message and the tests
+  will continue.
+
+  The default is NIL, i.e. not to drop into debugger. This mode is geared towards batch testing.
+")
+
+(defvar *re-signal* nil
+  "
+  Wether to signal an `ERROR' in case of an `ASSERT' failure but with ```*DROP-TO-DEBUGGER*''' off.
+
+  The default is NIL, i.e. not to signal. This mode is geared towards batch testing.
+")
+
+(defvar *signal-after-run-tests* T
+  "
+  Wether to signal an `ERROR' at the end of `RUN-TEST' if any of the tests failed.
+
+  The default is T (yes, signal).
+"
+ )
+
+
+
+(defun first-docline (sym)
+  "Extract the first line of the documentation as tagline for logging"
+  (let ((docstring (documentation sym 'FUNCTION)))
+    (if docstring
+	(multiple-value-bind (prefix first-line?)
+	    (CL-PPCRE:scan-to-strings  "^[\\n ]*([^ \\n].*)" docstring)
+	  (declare (ignorable prefix))	 
+	  (if first-line?
+	      (aref first-line? 0))))))
+
+
+(defun run-tests ()
+
+  "
+  Runs all tests from `*TESTS*' sorting them accordingly into `*FAILED*' and `*PASSED*'.
+
+  Conditions of type `ERROR' (like as signalled by an `ASSERT') signalled in the tests result in immediate
+  abortion of its execution and the symbol for the test being pushed to`*FAILED*'.
+
+  The symbols for tests that execute without signalling an `ERROR' are pushed to `*PASSED*'.
+
+  Specification: See `TEST:FAILING-ASSERTIONS-DURING-RUN-TESTS'.
+                 Execute (load-tests) before or load test.lisp.
+  "
+  
+  (setf *failed* '())
+  (setf *passed* '())
+  (format t "~&------------------------------------------------~%~%")
+  (format t "~&*tests*~8t = ~a~%~%" *tests*)
+  (dolist (test (reverse *tests*))
+    (let ((*current-test* test))
+      (format t "---- ~a::~a ----~%" (package-name (symbol-package test)) test)
+      (let ((tagline (first-docline test)))
+	(if tagline
+	    (format t "  ;; ~a~%" tagline)))
+      (if *drop-into-debugger*
+	  (progn
+	    (apply (symbol-function test) nil)
+	    (push test *passed*)
+	    (format t "~&  => PASSED ~a~%~%" test)
+	    t)
+	  (handler-case
+	      (progn
+		(apply (symbol-function test) nil)
+		(push test *passed*)
+		(format t "~&  => PASSED ~a~%~%" test)
+		t)
+	    (simple-error (c)
+	      (push test *failed*)
+	      (format t "~a~%" c)
+	      (format t "~&**** FAILED: ~a~%" test)
+	      (if *re-signal* (error c)))))))
+  
+  (format t "~&------------------------------------------------~%")
+  
+  (if *failed*
+      (progn
+	(format t "FAILED: ~a of ~a tests: ~a~%"
+		(length *failed*) (length *tests*) (reverse *failed*))
+	(if *signal-after-run-tests*
+	    (error (format nil "~a of ~a tests failed: ~a."
+			   (length *failed*) (length *tests*) (reverse *failed*)))))
+      (format t "ALL PASSED (~a tests)~%" (length *tests*)))
+  (reverse *failed*))
 
 ;;; * -- Resetting state ------------------------------------------------------------------------------------|
 

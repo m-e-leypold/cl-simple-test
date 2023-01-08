@@ -34,7 +34,9 @@
   (:export
    :run-tests-local
    :defining-tests
-   :failing-assertions-in-tests))
+   :failing-assertions-in-tests
+   :failing-assertions-during-run-tests
+   ))
 
 (in-package :de.m-e-leypold.cl-simple-test/tests)
 
@@ -81,9 +83,11 @@
      (format t "~&  Checking: ~S.~%" (quote ,cond))
      (if ,cond
 	 t
-	 (error 'test-failure
-		:test-name *current-test-local*
-		:failed-condition (quote ,cond)))))
+	 (progn
+	   (format t "  *** Check failed in ~S ***~%" *current-test-local*)
+	   (error 'test-failure
+		  :test-name *current-test-local*
+		  :failed-condition (quote ,cond))))))
 
 (defun test-failure (&key failed-condition explanation)
   (error 'test-failure
@@ -238,6 +242,97 @@
       (declare (ignorable e1 e2))
       (test-failure
        :explanation "No error signalled by test function T1 supposed to trigger a failing assertion"))))
+
+(deftest-local failing-assertions-during-run-tests ()
+    "Checks `RUN-TESTS': Executing the tests; signalled errors count a failed.
+
+     `RUN-TESTS' executes tests.
+
+     1. In order of their definition.
+     2. Tests that execute without signalling will be counted as passed and registered in `*PASSED*' (as
+        symbol).
+     3. Tests that signal an error (as from a failing assertion) are counted as failed and registered in
+        `*FAILED*'.
+     4. Signalled conditions different from `ERROR' just escape the tests.
+
+     5. After running all tests, if any tests failed, `RUN-TESTS' will signal an error with a message like
+        \"#<SIMPLE-ERROR \"2 of 4 tests failed: (T2 T4).\" {1004CC4EA3}>\"
+
+     This is the default behaviour: To just continue running tests and signal an error at the end if any
+     failed.
+
+     Some variables allow to modify this behaviour:
+
+     6. If `*SIGNAL-AFTER-RUN-TESTS*' is NIL, no error according to (5) will be signalled at the end of
+        `RUN-TESTS'. Instead `RUN-TESTS' will just return the list of failed tests (in order of their
+        execution).
+
+     TODO: Behaviour if parameters are set: *RE-SIGNAL*, *DROP-INTO-DEBUGGER*
+"
+  
+  (explain "Resetting cl-simple-test.")
+  (reset-all-state)
+
+  (explain "Defining some tests (T1-4) that register their execution by setting flags. Some fail (T2, T4).")
+
+  (deftest t1 ()
+      "t1 executes without failure"
+    (set-flag 't1))
+
+  (deftest t2 ()
+      "t2 has a failing assertion"
+    (set-flag 't2)
+    (assert nil)
+    (set-flag 't2.not-aborted))
+  
+  (deftest t3 ()
+      "t3 executes without failure"
+    (set-flag 't3))
+  
+  (deftest t4 ()
+      "t4 signals an error"
+    (set-flag 't4)
+    (error "t4 error signal")
+    (set-flag 't4.not-aborted))
+
+  (explain "Running the defined tests.")
+
+  (handler-case
+      (run-tests)
+    
+    (error (e)
+      (let ((message
+	      (format nil "~S" e)))
+	(trace-expr message)
+	
+	(explain "Resulting error message must be a test summary.")
+	(assert-local (cl-ppcre:scan "^#<SIMPLE-ERROR.*2 of 4 tests failed: [(]T2 T4[)][.].*[>]" message))))
+    
+    (condition (e)
+	       (test-failure
+       :explanation
+       (format nil "RUN-TEST should have signalled an `error' condition, instead it signalled ~S." e)))
+    
+    (:NO-ERROR (e1 e2)
+      (declare (ignorable e1 e2))
+      (test-failure
+       :explanation "No error signalled by `RUN-TEST', but it should have.")))
+
+    (assert-local (equal *FAILED* '(T4 T2)))
+    (assert-local (equal *PASSED* '(T3 T1)))
+    
+  (explain "RUN-TESTS again with *SIGNAL-AFTER-RUN-TESTS*")
+
+  (let* ((*signal-after-run-tests* nil)
+	 (failed (run-tests)))
+
+    (trace-expr failed)    
+    (assert-local (equal failed '(T2 T4))))
+	    
+    ;; TODO More signalling tests (re-signal, drop-into-debugger
+  )
+
+;; TODO: Tests for `RUN-TESTS' when nothing fails    
 
 ;;; * -------------------------------------------------------------------------------------------------------|
 ;;;   WRT the outline-* and comment-* variables, see the comment in test.lisp
