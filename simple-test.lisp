@@ -47,7 +47,7 @@
    :*signal-after-run-tests*
    :*drop-into-debugger*
    :*re-signal*
-
+   :next-test ;; restart
    ))
 
 (in-package :de.m-e-leypold.cl-simple-test)
@@ -168,10 +168,19 @@
 	    (format t "  ;; ~a~%" tagline)))
       (if *drop-into-debugger*
 	  (progn
-	    (apply (symbol-function test) nil)
-	    (push test *passed*)
-	    (format t "~&  => PASSED ~a~%~%" test)
-	    t)
+	    (restart-case
+		(progn
+		  (handler-bind
+		      ((error (lambda (c)
+				(push test *failed*)
+				(format t "~a~%" c)
+				(format t "~&**** !FAILED: ~a~%" test))))		   
+		    (apply (symbol-function test) nil))
+		  
+		  (push test *passed*)
+		  (format t "~&  => PASSED ~a~%~%" test)
+		  t)
+	      (next-test () t)))
 	  (handler-case
 	      (progn
 		(apply (symbol-function test) nil)

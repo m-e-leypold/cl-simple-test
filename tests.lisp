@@ -267,6 +267,10 @@
         `RUN-TESTS'. Instead `RUN-TESTS' will just return the list of failed tests (in order of their
         execution).
 
+     7. When setting *DROP-INTO-DEBUGGER*, `ERROR' signals escape `RUN-TEST' and are not handled internally. A
+        restart `NEXT-TEST' is available to continue with the next test (either by a handler or interactively
+        in the debugger.
+
      TODO: Behaviour if parameters are set: *RE-SIGNAL*, *DROP-INTO-DEBUGGER*
 "
   
@@ -321,7 +325,7 @@
     (assert-local (equal *FAILED* '(T4 T2)))
     (assert-local (equal *PASSED* '(T3 T1)))
     
-  (explain "RUN-TESTS again with *SIGNAL-AFTER-RUN-TESTS*")
+  (explain "RUN-TESTS again with *SIGNAL-AFTER-RUN-TESTS* off")
 
   (let* ((*signal-after-run-tests* nil)
 	 (failed (run-tests)))
@@ -329,8 +333,27 @@
     (trace-expr failed)    
     (assert-local (equal failed '(T2 T4))))
 	    
-    ;; TODO More signalling tests (re-signal, drop-into-debugger
-  )
+  (explain "RUN-TESTS again with *DROP-into-debugger*, restarting with NEXT-TEST")
+
+  (let ((handler-invocations 0))
+    (handler-bind
+	((error #'(lambda (c)
+		    (incf handler-invocations)
+		    (invoke-restart 'next-test)))
+	 (condition #'(lambda (c)
+			(test-failure
+			 :explanation
+			 (format nil
+				 "run-tests signalled ~s but should have signalled an error." (type-of c))))))
+      
+      (let ((*drop-into-debugger* t)
+	     (*signal-after-run-tests* nil))
+	(let ((failed (run-tests)))	
+	  (assert-local (equal failed '(T2 T4)))))
+      (assert-local (= 2 handler-invocations))))
+  (assert-local (equal *passed* '(T3 T1)))
+  (assert-local (equal *failed* '(T4 T2))))
+
 
 ;; TODO: Tests for `RUN-TESTS' when nothing fails    
 
