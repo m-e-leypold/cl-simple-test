@@ -1,3 +1,4 @@
+<
 ;;; * -- (C) 2022  M E Leypold ------------------------------------------------------------*- common-lisp -*-|
 ;;;
 ;;;   de.m-e-leypold.cl-simple.test -- a simple testing framework for common lisp.
@@ -89,7 +90,7 @@
 
    Every test must have a docstring DOC that describes what is tested in the test and how.
 
-   Specification: See `TEST:DEFINING-TESTS' and `TEST:FAILING-ASSERTIONS-IN-TESTS'.
+   Specification: `TEST:DEFINING-TESTS', `TEST:FAILING-ASSERTIONS-IN-TESTS'.
                   Execute (load-tests) before or load test.lisp.
 "
   (assert (not args) nil
@@ -171,8 +172,21 @@
 
   The symbols for tests that execute without signalling an `ERROR' are pushed to `*PASSED*'.
 
-  Specification: See `TEST:FAILING-ASSERTIONS-DURING-RUN-TESTS', `TEST:FAILING-ASSERTIONS-DURING-RUN-TESTS'.
+  Parameters modifying behaviour:
+
+  - `*DROP-INTO-DEBUGGER*' -- instead of just registering a test as failed when a condition is
+     signalled, let the signal propagate upwards the stack, so that restarts NEXT-TEST or
+     ABORT-TESTS can be selected. Default behaviour: Handle the signal in `RUN-TESTS'
+     internally.
+
+  - '*SIGNAL-AFTER-RUN-TESTS*' -- Signal an error at the end of `RUN-TESTS' if any tests
+     failed. This is the default.
+    
+
+  Specification: `TEST:RUNNING-TESTS', `TEST:FAILING-ASSERTIONS-DURING-RUN-TESTS'.
                  Execute (load-tests) before or load test.lisp.
+
+  See also: `TEST:FAILING-ASSERTIONS-IN-TESTS'.
   "
 
   (setf *failed* '())

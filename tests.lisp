@@ -34,8 +34,9 @@
   (:export
    :run-tests-local
    :defining-tests
+   :running-tests
    :failing-assertions-in-tests
-   :failing-assertions-during-run-tests
+   :failing-assertions-during-run-tests   
    ))
 
 (in-package :de.m-e-leypold.cl-simple-test/tests)
@@ -115,7 +116,7 @@
   (dolist (test (reverse *tests-local*))
     (format t "~%")
     (funcall test))
-  (format t "~%~a: All ~a tests succeeded: ~S.~%"
+  (format t "~%~a: All ~a tests succeeded: ~a.~%"	  
 	  *program-name* (length *tests-local*) (reverse *tests-local*)))
 
 ;;; * The tests themselves ----------------------------------------------------------------------------------|
@@ -207,6 +208,47 @@
       (declare (ignorable e1 e2))
       (test-failure
        :explanation "No error signalled by DEFTEST T3 supposed to trigger a failing assertion"))))
+
+;;; ** Running tests ----------------------------------------------------------------------------------------|
+
+(deftest-local running-tests ()
+    "
+    Checking: `RUN-TESTS' runs tests in order of their definition.
+
+    If no condition is signalled:
+
+    1.`RUN-TESTS' will run tests in the order of their definition and not signal.
+
+    2. No tests will be flagged as failed, i.e. `*FAILED*' will be empty.
+
+    3. All tests (as symbols) will be pushed into `*PASSED*'.
+"
+
+  (explain "Resetting cl-simple-test.")
+  (reset-all-state)
+
+  (explain "Defining some tests (T1-4) that register their execution by setting flags. Some fail (T2, T4).")
+
+  (deftest t1 ()
+      "t1 executes without failure"
+    (set-flag 't1))
+
+  (deftest t2 ()
+      "t2 has a failing assertion"
+    (set-flag 't2))
+
+  (deftest t3 ()
+      "t3 executes without failure"
+    (set-flag 't3))
+
+  (handler-case
+      (run-tests)
+    (condition (c) (test-failure :explanation
+				 (format nil "RUN-TESTS signalled ~S, but should not have" (type-of c)))))
+  (assert (equal *failed* '()))
+  (assert (equal *flags*  '(T3 T2 T1))) ; run order
+  (assert (equal *passed* '(T3 T2 T1))))
+
 
 ;;; ** Assertion  handling ----------------------------------------------------------------------------------|
 ;;; *** Errors are not handled in the test procedures -------------------------------------------------------|
