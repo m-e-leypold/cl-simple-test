@@ -2,17 +2,17 @@
 ;;;
 ;;;   de.m-e-leypold.cl-simple.test -- a simple testing framework for common lisp.
 ;;;   Copyright (C) 2022  M E Leypold
-;;;   
+;;;
 ;;;   This program is free software: you can redistribute it and/or modify
 ;;;   it under the terms of the GNU General Public License as published by
 ;;;   the Free Software Foundation, either version 3 of the License, or
 ;;;   (at your option) any later version.
-;;;   
+;;;
 ;;;   This program is distributed in the hope that it will be useful,
 ;;;   but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;;;   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;;;   GNU General Public License for more details.
-;;;   
+;;;
 ;;;   You should have received a copy of the GNU General Public License
 ;;;   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ;;;
@@ -34,31 +34,31 @@
    :assert-condition
    :assert-no-condition
    :assert-and-capture-condition
-   
+
    ;; defining tests
-   
+
    :deftest
    :*tests*
    :reset-test-definitions
 
    ;; running tests
-   
+
    :*current-test*
    :run-tests
    :reset-run-state
- 
+
    ;; test results
-   
+
    :*failed*
    :*passed*
 
    ;; parameters
-   
+
    :*signal-after-run-tests*
    :*drop-into-debugger*
 
    ;; restarts
-   :next-test 
+   :next-test
    :abort-tests
    ))
 
@@ -114,6 +114,7 @@
 
 (defparameter *failed* '()
   "Contains the failed tests after running the tests with ```RUN-TESTS'''")
+
 (defparameter *passed* '()
   "Contains the passed tests after running the tests with ```RUN-TESTS'''")
 
@@ -134,6 +135,20 @@
 "
  )
 
+(defun test-failed (c)
+  "Registers `*CURRENT-TEST' as failed."
+  (push *current-test* *failed*)
+  (format t "~a~%" c)
+  (format t "~&**** !FAILED: ~a~%" *current-test*)
+  nil
+  )
+
+(defun test-passed ()
+  "Registers `*CURRENT-TEST' as passed."
+  (push *current-test* *passed*)
+  (format t "~&  => PASSED ~a~%~%" *current-test*)
+  t
+  )
 
 
 (defun first-docline (sym)
@@ -142,10 +157,9 @@
     (if docstring
 	(multiple-value-bind (prefix first-line?)
 	    (CL-PPCRE:scan-to-strings  "^[\\n ]*([^ \\n].*)" docstring)
-	  (declare (ignorable prefix))	 
+	  (declare (ignorable prefix))
 	  (if first-line?
 	      (aref first-line? 0))))))
-
 
 (defun run-tests ()
 
@@ -160,51 +174,41 @@
   Specification: See `TEST:FAILING-ASSERTIONS-DURING-RUN-TESTS', `TEST:FAILING-ASSERTIONS-DURING-RUN-TESTS'.
                  Execute (load-tests) before or load test.lisp.
   "
-  
+
   (setf *failed* '())
   (setf *passed* '())
   (format t "~&------------------------------------------------~%~%")
   (format t "~&*tests*~8t = ~a~%~%" *tests*)
-  
+
   (restart-case
-      
+
       (dolist (test (reverse *tests*))
 	(let ((*current-test* test))
+
 	  (format t "---- ~a::~a ----~%" (package-name (symbol-package test)) test)
 	  (let ((tagline (first-docline test)))
 	    (if tagline
 		(format t "  ;; ~a~%" tagline)))
+
 	  (if *drop-into-debugger*
 	      (progn
 		(restart-case
 		    (progn
 		      (handler-bind
-			  ((error (lambda (c)
-				    (push test *failed*)
-				    (format t "~a~%" c)
-				    (format t "~&**** !FAILED: ~a~%" test))))		   
+			  ((error #'test-failed))
 			(apply (symbol-function test) nil))
-		      
-		      (push test *passed*)
-		      (format t "~&  => PASSED ~a~%~%" test)
-		      t)
+		      (test-passed))
 		  (next-test () t)))
 	      (handler-case
 		  (progn
 		    (apply (symbol-function test) nil)
-		    (push test *passed*)
-		    (format t "~&  => PASSED ~a~%~%" test)
-		    t)
-		(simple-error (c)
-		  (push test *failed*)
-		  (format t "~a~%" c)
-		  (format t "~&**** FAILED: ~a~%" test))))))
+		    (test-passed))
+		(simple-error (c) (test-failed c))))))
 
     (abort-tests () t))
 
-  
   (format t "~&------------------------------------------------~%")
-  
+
   (if *failed*
       (progn
 	(format t "FAILED: ~a of ~a tests: ~a~%"
@@ -223,4 +227,3 @@
 (defun reset-test-definitions ()
   (reset-test-run-state)
   (setf *tests* '()))
-

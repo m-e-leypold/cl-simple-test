@@ -278,7 +278,7 @@
      9. When signalling, a restart `ABORT-TEST' is available to abort testing, but still evaluate
         whether tests failed and process failures according to (5).
 "
-  
+
   (explain "Resetting cl-simple-test.")
   (reset-all-state)
 
@@ -293,11 +293,11 @@
     (set-flag 't2)
     (assert nil)
     (set-flag 't2.not-aborted))
-  
+
   (deftest t3 ()
       "t3 executes without failure"
     (set-flag 't3))
-  
+
   (deftest t4 ()
       "t4 signals an error"
     (set-flag 't4)
@@ -308,20 +308,20 @@
 
   (handler-case
       (run-tests)
-    
+
     (error (e)
       (let ((message
 	      (format nil "~S" e)))
 	(trace-expr message)
-	
+
 	(explain "Resulting error message must be a test summary.")
 	(assert-local (cl-ppcre:scan "^#<SIMPLE-ERROR.*2 of 4 tests failed: [(]T2 T4[)][.].*[>]" message))))
-    
+
     (condition (e)
 	       (test-failure
        :explanation
        (format nil "RUN-TEST should have signalled an `error' condition, instead it signalled ~S." e)))
-    
+
     (:NO-ERROR (e1 e2)
       (declare (ignorable e1 e2))
       (test-failure
@@ -329,15 +329,15 @@
 
     (assert-local (equal *FAILED* '(T4 T2)))
     (assert-local (equal *PASSED* '(T3 T1)))
-    
+
   (explain "RUN-TESTS again with *SIGNAL-AFTER-RUN-TESTS* off")
 
   (let* ((*signal-after-run-tests* nil)
 	 (failed (run-tests)))
 
-    (trace-expr failed)    
+    (trace-expr failed)
     (assert-local (equal failed '(T2 T4))))
-	    
+
   (explain "RUN-TESTS again with *DROP-into-debugger*, restarting with NEXT-TEST")
 
   (let ((handler-invocations 0)
@@ -345,26 +345,27 @@
     (handler-bind
 	((error #'(lambda (c)
 		    (declare (ignorable c))
+		    (format t "  error handler: ~S." c)
 		    (incf handler-invocations)
 		    (invoke-restart 'next-test)))
-	 
+
 	 (condition #'(lambda (c)
 			(test-failure
 			 :explanation
 			 (format nil
 				 "run-tests signalled ~s but should have signalled an error." (type-of c))))))
-      
+
       (let ((*drop-into-debugger* t)
 	    (*signal-after-run-tests* nil))
 	(setf failed (run-tests))))
-    
+
     (assert-local (equal failed '(T2 T4)))
     (assert-local (= 2 handler-invocations))
     (assert-local (equal *passed* '(T3 T1)))
     (assert-local (equal *failed* '(T4 T2))))
 
   (explain "RUN-TESTS again with *DROP-into-debugger*, restarting with ABORT-TESTS")
-  
+
   (let ((handler-invocations 0)
 	(failed '()))
     (handler-bind
@@ -377,11 +378,11 @@
 			 :explanation
 			 (format nil
 				 "run-tests signalled ~s but should have signalled an error." (type-of c))))))
-      
+
       (let ((*drop-into-debugger* t)
 	     (*signal-after-run-tests* nil))
 	(setf failed (run-tests))))
-    
+
     (assert-local (equal failed '(T2)))
     (assert-local (= 1 handler-invocations))
     (assert-local (equal *passed* '(T1)))
