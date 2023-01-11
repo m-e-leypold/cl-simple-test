@@ -55,8 +55,10 @@ publish:                            # We only release from main
 clean-fasl-cache:
 	rm -rf $(HOME)/.cache/common-lisp
 
-check-warnings:
+prep-check-all: clean-fasl-cache
 	$(CHECK-PREP) >CHECK-PREP.log 2>&1
+
+check-warnings: prep-check-all
 	$(LOAD) >CHECK.log 2>&1
 	! grep -C8 -i "warn" CHECK.log  # This could be smarter
 	@echo

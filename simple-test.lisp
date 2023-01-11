@@ -34,20 +34,32 @@
    :assert-condition
    :assert-no-condition
    :assert-and-capture-condition
+   
+   ;; defining tests
+   
    :deftest
-   :run-tests
-
    :*tests*
-   :*current-test*
    :reset-test-definitions
-   :reset-run-state
+
+   ;; running tests
+   
+   :*current-test*
    :run-tests
+   :reset-run-state
+ 
+   ;; test results
+   
    :*failed*
    :*passed*
+
+   ;; parameters
+   
    :*signal-after-run-tests*
    :*drop-into-debugger*
-   :*re-signal*
-   :next-test ;; restart
+
+   ;; restarts
+   :next-test 
+   :abort-tests
    ))
 
 (in-package :de.m-e-leypold.cl-simple-test)
@@ -114,13 +126,6 @@
   The default is NIL, i.e. not to drop into debugger. This mode is geared towards batch testing.
 ")
 
-(defvar *re-signal* nil
-  "
-  Wether to signal an `ERROR' in case of an `ASSERT' failure but with ```*DROP-TO-DEBUGGER*''' off.
-
-  The default is NIL, i.e. not to signal. This mode is geared towards batch testing.
-")
-
 (defvar *signal-after-run-tests* T
   "
   Wether to signal an `ERROR' at the end of `RUN-TEST' if any of the tests failed.
@@ -152,7 +157,7 @@
 
   The symbols for tests that execute without signalling an `ERROR' are pushed to `*PASSED*'.
 
-  Specification: See `TEST:FAILING-ASSERTIONS-DURING-RUN-TESTS'.
+  Specification: See `TEST:FAILING-ASSERTIONS-DURING-RUN-TESTS', `TEST:FAILING-ASSERTIONS-DURING-RUN-TESTS'.
                  Execute (load-tests) before or load test.lisp.
   "
   
@@ -160,38 +165,43 @@
   (setf *passed* '())
   (format t "~&------------------------------------------------~%~%")
   (format t "~&*tests*~8t = ~a~%~%" *tests*)
-  (dolist (test (reverse *tests*))
-    (let ((*current-test* test))
-      (format t "---- ~a::~a ----~%" (package-name (symbol-package test)) test)
-      (let ((tagline (first-docline test)))
-	(if tagline
-	    (format t "  ;; ~a~%" tagline)))
-      (if *drop-into-debugger*
-	  (progn
-	    (restart-case
-		(progn
-		  (handler-bind
-		      ((error (lambda (c)
-				(push test *failed*)
-				(format t "~a~%" c)
-				(format t "~&**** !FAILED: ~a~%" test))))		   
-		    (apply (symbol-function test) nil))
-		  
-		  (push test *passed*)
-		  (format t "~&  => PASSED ~a~%~%" test)
-		  t)
-	      (next-test () t)))
-	  (handler-case
+  
+  (restart-case
+      
+      (dolist (test (reverse *tests*))
+	(let ((*current-test* test))
+	  (format t "---- ~a::~a ----~%" (package-name (symbol-package test)) test)
+	  (let ((tagline (first-docline test)))
+	    (if tagline
+		(format t "  ;; ~a~%" tagline)))
+	  (if *drop-into-debugger*
 	      (progn
-		(apply (symbol-function test) nil)
-		(push test *passed*)
-		(format t "~&  => PASSED ~a~%~%" test)
-		t)
-	    (simple-error (c)
-	      (push test *failed*)
-	      (format t "~a~%" c)
-	      (format t "~&**** FAILED: ~a~%" test)
-	      (if *re-signal* (error c)))))))
+		(restart-case
+		    (progn
+		      (handler-bind
+			  ((error (lambda (c)
+				    (push test *failed*)
+				    (format t "~a~%" c)
+				    (format t "~&**** !FAILED: ~a~%" test))))		   
+			(apply (symbol-function test) nil))
+		      
+		      (push test *passed*)
+		      (format t "~&  => PASSED ~a~%~%" test)
+		      t)
+		  (next-test () t)))
+	      (handler-case
+		  (progn
+		    (apply (symbol-function test) nil)
+		    (push test *passed*)
+		    (format t "~&  => PASSED ~a~%~%" test)
+		    t)
+		(simple-error (c)
+		  (push test *failed*)
+		  (format t "~a~%" c)
+		  (format t "~&**** FAILED: ~a~%" test))))))
+
+    (abort-tests () t))
+
   
   (format t "~&------------------------------------------------~%")
   

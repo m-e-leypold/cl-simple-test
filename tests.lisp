@@ -209,6 +209,7 @@
        :explanation "No error signalled by DEFTEST T3 supposed to trigger a failing assertion"))))
 
 ;;; ** Assertion  handling ----------------------------------------------------------------------------------|
+;;; *** Errors are not handled in the test procedures -------------------------------------------------------|
 
 (deftest-local failing-assertions-in-tests ()
     "Checking: Errors raised by assertions in tests escape the test functions.
@@ -243,8 +244,10 @@
       (test-failure
        :explanation "No error signalled by test function T1 supposed to trigger a failing assertion"))))
 
+;;; *** Error handling by `RUN-TESTS' -----------------------------------------------------------------------|
+
 (deftest-local failing-assertions-during-run-tests ()
-    "Checks `RUN-TESTS': Executing the tests; signalled errors count a failed.
+    "Checks `RUN-TESTS': Executing the tests; signalled errors count as failed.
 
      `RUN-TESTS' executes tests.
 
@@ -267,11 +270,13 @@
         `RUN-TESTS'. Instead `RUN-TESTS' will just return the list of failed tests (in order of their
         execution).
 
-     7. When setting *DROP-INTO-DEBUGGER*, `ERROR' signals escape `RUN-TEST' and are not handled internally. A
-        restart `NEXT-TEST' is available to continue with the next test (either by a handler or interactively
-        in the debugger.
+     7. When setting *DROP-INTO-DEBUGGER*, `ERROR' signals escape `RUN-TEST' and are not handled internally.
 
-     TODO: Behaviour if parameters are set: *RE-SIGNAL*, *DROP-INTO-DEBUGGER*
+     8. When signalling, a restart `NEXT-TEST' is available to continue with the next test (either by a
+        handler or interactively in the debugger.
+
+     9. When signalling, a restart `ABORT-TEST' is available to abort testing, but still evaluate
+        whether tests failed and process failures according to (5).
 "
   
   (explain "Resetting cl-simple-test.")
@@ -335,11 +340,38 @@
 	    
   (explain "RUN-TESTS again with *DROP-into-debugger*, restarting with NEXT-TEST")
 
-  (let ((handler-invocations 0))
+  (let ((handler-invocations 0)
+	(failed '()))
     (handler-bind
 	((error #'(lambda (c)
+		    (declare (ignorable c))
 		    (incf handler-invocations)
 		    (invoke-restart 'next-test)))
+	 
+	 (condition #'(lambda (c)
+			(test-failure
+			 :explanation
+			 (format nil
+				 "run-tests signalled ~s but should have signalled an error." (type-of c))))))
+      
+      (let ((*drop-into-debugger* t)
+	    (*signal-after-run-tests* nil))
+	(setf failed (run-tests))))
+    
+    (assert-local (equal failed '(T2 T4)))
+    (assert-local (= 2 handler-invocations))
+    (assert-local (equal *passed* '(T3 T1)))
+    (assert-local (equal *failed* '(T4 T2))))
+
+  (explain "RUN-TESTS again with *DROP-into-debugger*, restarting with ABORT-TESTS")
+  
+  (let ((handler-invocations 0)
+	(failed '()))
+    (handler-bind
+	((error #'(lambda (c)
+		    (declare (ignorable c))
+		    (incf handler-invocations)
+		    (invoke-restart 'abort-tests)))
 	 (condition #'(lambda (c)
 			(test-failure
 			 :explanation
@@ -348,14 +380,13 @@
       
       (let ((*drop-into-debugger* t)
 	     (*signal-after-run-tests* nil))
-	(let ((failed (run-tests)))	
-	  (assert-local (equal failed '(T2 T4)))))
-      (assert-local (= 2 handler-invocations))))
-  (assert-local (equal *passed* '(T3 T1)))
-  (assert-local (equal *failed* '(T4 T2))))
+	(setf failed (run-tests))))
+    
+    (assert-local (equal failed '(T2)))
+    (assert-local (= 1 handler-invocations))
+    (assert-local (equal *passed* '(T1)))
+    (assert-local (equal *failed* '(T2)))))
 
-
-;; TODO: Tests for `RUN-TESTS' when nothing fails    
 
 ;;; * -------------------------------------------------------------------------------------------------------|
 ;;;   WRT the outline-* and comment-* variables, see the comment in test.lisp
