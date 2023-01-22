@@ -16,7 +16,7 @@
 ;;;   You should have received a copy of the GNU General Public License
 ;;;   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ;;;
-;;;   For altermative licensing options, see README.md
+;;;   For alternative licensing options, see README.md
 ;;;
 ;;;
 ;;; * Options -----------------------------------------------------------------------------------------------|
@@ -150,7 +150,7 @@
 ;;; ** Defining Tests ---------------------------------------------------------------------------------------|
 
 (deftest-local defining-tests ()
-    "Checking `DEFTEST' -- defines tests.
+  "Checking `DEFTEST' -- defines tests.
 
      Specification:
 

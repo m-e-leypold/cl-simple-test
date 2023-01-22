@@ -1,4 +1,3 @@
-<
 ;;; * -- (C) 2022  M E Leypold ------------------------------------------------------------*- common-lisp -*-|
 ;;;
 ;;;   de.m-e-leypold.cl-simple.test -- a simple testing framework for common lisp.
