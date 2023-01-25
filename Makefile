@@ -1,5 +1,5 @@
 #
-#   de.m-e-leypold.cl-simple.test -- a simple testing framework for common lisp.
+#   de.m-e-leypold.cl-simple-utils -- Some utility functions.
 #   Copyright (C) 2022  M E Leypold
 #   
 #   This program is free software: you can redistribute it and/or modify
@@ -15,38 +15,54 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
-#   For altermative licensing options, see README.md
+#   For alternative licensing options, see README.md
 #
 
-# The intended effect is, to load all files into the fasl cache. Checking the warnings is a side
-# effect that, since the cache is nor cleared, will go away on the second invocation.
-#
 all:: check-warnings
 
+ASD-FILE        = $(wildcard *.asd)
+PRIMARY-SYSTEM  = $(ASD-FILE:%.asd=%)
+SHORT-NAME      = $(lastword $(subst ., ,$(PRIMARY-SYSTEM)))
+TEST-RUNNER     = $(strip $(wildcard test.lisp))
+AUTHOR-ID      ?= m-e-leypold
+GITLAB         ?= git@gitlab.com:$(AUTHOR-ID)/$(SHORT-NAME).git
+GITHUB         ?= git@github.com:$(AUTHOR-ID)/$(SHORT-NAME).git
+
+$(info PRIMARY-SYSTEM = $(PRIMARY-SYSTEM))
+$(info SHORT-NAME     = $(SHORT-NAME))
+$(info TEST-RUNNER    = $(SHORT-NAME))
+
 clean::
-	rm -f *~ *.log *.fasl
+	rm -f *~ *.log *.fasl	
 
-CHECK-PREP = sbcl --noinform --disable-debugger \
-                  --eval '(asdf:load-system "de.m-e-leypold.cl-simple-test/prerequisites")' --quit
-LOAD       = sbcl --noinform --disable-debugger \
-                  --eval '(asdf:load-system "de.m-e-leypold.cl-simple-test/tests")' --quit
-CHECK      = sbcl --noinform --disable-debugger --load test.lisp --quit
+CHECK-PREP = sbcl --noinform --disable-debugger --eval '(asdf:load-system "$(PRIMARY-SYSTEM)/prerequisites")' --quit
+LOAD       = sbcl --noinform --disable-debugger --eval '(asdf:load-system "$(PRIMARY-SYSTEM)/load-all")' --quit
 
+ifeq ($(TEST-RUNNER),)
+check::    # There are no checks here
+else
+CHECK      = sbcl --noinform --disable-debugger --load $(TEST-RUNNER) --quit
 check::
 	$(CHECK)
 	@echo
+endif
 
 # The procedures below are for the original author of this package.
 
 git-setup:                          # This are the upstream repositories
 	git remote rm GITLAB || true
 	git remote rm GITHUP || true
-	git remote add GITLAB git@gitlab.com:m-e-leypold/cl-simple-test.git
-	git remote add GITHUB git@github.com:m-e-leypold/cl-simple-test.git
+	git remote add GITLAB $(GITLAB)
+	git remote add GITHUB $(GITHUB)
 	git fetch GITLAB
 	git fetch GITHUB
 
-publish:                            # We only release from main
+publish: check-all
+	git branch | grep '^[*] main$$' # We only release from main
+	if git status -s | cut -c1-2  | grep ' [^ ?]'; \
+	   then git status -s ; false; \
+           else true; \
+        fi
 	git push GITLAB main
 	git push GITHUB main
 	git push origin main
@@ -55,10 +71,8 @@ publish:                            # We only release from main
 clean-fasl-cache:
 	rm -rf $(HOME)/.cache/common-lisp
 
-prep-check-all: clean-fasl-cache
+check-warnings:
 	$(CHECK-PREP) >CHECK-PREP.log 2>&1
-
-check-warnings: prep-check-all
 	$(LOAD) >CHECK.log 2>&1
 	! grep -C8 -i "warn" CHECK.log  # This could be smarter
 	@echo

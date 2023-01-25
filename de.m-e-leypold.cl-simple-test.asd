@@ -35,7 +35,6 @@
   :description "Tests and specifications for CL-SIMPLE-TEST"
   :components ((:file "tests")))
 
-
 (defsystem "de.m-e-leypold.cl-simple-test/prerequisites"
   :author "M E Leypold [elegant-weapons ( AT) m-e-leypold (DOT) de]"
   :licence "GPL3"
@@ -43,6 +42,11 @@
   :description "Just all external prerequisites"
   :components ())
 
+(defsystem "de.m-e-leypold.cl-simple-test/load-all"
+  :author "M E Leypold [elegant-weapons ( AT) m-e-leypold (DOT) de]"
+  :licence "GPL3"
+  :description "Load all systems in CL-SIMPLE-TEST"
+  :depends-on ("de.m-e-leypold.cl-simple-test" "de.m-e-leypold.cl-simple-test/tests"))
 
 
 
