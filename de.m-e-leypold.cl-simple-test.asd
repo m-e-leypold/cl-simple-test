@@ -31,14 +31,19 @@
 (defsystem "de.m-e-leypold.cl-simple-test/tests"
   :author "M E Leypold [elegant-weapons ( AT) m-e-leypold (DOT) de]"
   :licence "GPL3"
-  :depends-on ("cl-ppcre" "de.m-e-leypold.cl-simple-test" "de.m-e-leypold.cl-simple-utils")
+  :depends-on ("cl-ppcre"
+	       "de.m-e-leypold.cl-simple-test"
+	       "de.m-e-leypold.cl-simple-utils"
+	       "de.m-e-leypold.cl-simple-utils/basic-test")
   :description "Tests and specifications for CL-SIMPLE-TEST"
   :components ((:file "tests")))
 
 (defsystem "de.m-e-leypold.cl-simple-test/prerequisites"
   :author "M E Leypold [elegant-weapons ( AT) m-e-leypold (DOT) de]"
   :licence "GPL3"
-  :depends-on ("cl-ppcre" "de.m-e-leypold.cl-simple-utils")
+  :depends-on ("cl-ppcre"
+	       "de.m-e-leypold.cl-simple-utils"
+	       "de.m-e-leypold.cl-simple-utils/basic-test")
   :description "Just all external prerequisites"
   :components ())
 

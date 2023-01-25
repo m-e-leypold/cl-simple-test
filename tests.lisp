@@ -30,7 +30,8 @@
   (:use
    :common-lisp
    :de.m-e-leypold.cl-simple-test
-   :de.m-e-leypold.cl-simple-utils)
+   :de.m-e-leypold.cl-simple-utils
+   :de.m-e-leypold.cl-simple-utils/basic-test)   
   (:export
    :run-tests-local
    :defining-tests
@@ -46,107 +47,12 @@
 			       :de.m-e-leypold.cl-simple-test)
 
 
-;;; * Infrastructure for testing simple-test ----------------------------------------------------------------|
-
-(defparameter *program-name* "tests.lisp")
-
-(define-condition test-failure (condition)
-  ((test-name
-    :reader   test-name
-    :initarg  :test-name
-    :initform nil
-    )
-   (failed-condition
-    :reader  failed-condition
-    :initarg :failed-condition
-    :initform nil)
-   (explanation
-    :reader  explanation
-    :initarg :explanation
-    :initform nil)))
-
-(defmethod print-object ((failure test-failure) stream)
-
-  "Print a `TEST-FAILURE' instance."
-
-  (print-unreadable-object (failure stream :type t)
-    (format stream ":test-name ~a" (test-name failure))
-    (if (failed-condition failure)
-	(format stream " :cond ~S" (failed-condition failure)))
-    (if (explanation failure)
-	(format stream " :explanation ~S" (explanation failure)))))
-
-(defvar *tests-local* '())
-(defvar *current-test-local* nil)
-
-(defmacro assert-local (cond)
-  `(progn
-     (format t "~&  Checking: ~S.~%" (quote ,cond))
-     (if ,cond
-	 t
-	 (progn
-	   (format t "  *** Check failed in ~S ***~%" *current-test-local*)
-	   (error 'test-failure
-		  :test-name *current-test-local*
-		  :failed-condition (quote ,cond))))))
-
-(defun test-failure (&key failed-condition explanation)
-  (error 'test-failure
-	 :test-name *current-test-local*
-	 :failed-condition failed-condition
-	 :explanation explanation))
-
-
-(defmacro deftest-local (name args docstring &body body)
-  (assert (not args) nil (format nil "arguments of DEFTEST-LOCAL ~S must be empty" name))
-  `(progn
-     (setf *tests-local* (adjoin (quote ,name) *tests-local*))
-     (defun ,name ()
-     ,docstring
-     (let ((*current-test-local* (quote ,name)))
-       (format t "~&~a: Test ~S ...~%" *program-name* *current-test-local*)
-       (format t "~%     ~a~%" (documentation (quote ,name) 'function))
-       (progn ,@body)
-       (format t "~&~a: => OK (~S).~%" *program-name* *current-test-local*)))))
-
-(defun run-tests-local ()
-  (format t "~&~%~a: Will run ~a tests: ~S.~%"
-	  *program-name* (length *tests-local*) (reverse *tests-local*))
-  (format t "  First failing test will abort this test run.~%")
-  (dolist (test (reverse *tests-local*))
-    (format t "~%")
-    (funcall test))
-  (format t "~%~a: All ~a tests succeeded: ~a.~%"	  
-	  *program-name* (length *tests-local*) (reverse *tests-local*)))
-
-;;; * The tests themselves ----------------------------------------------------------------------------------|
-;;; ** Infrastructure & test devices ------------------------------------------------------------------------|
-
-(defvar *flags* '()
-  "A variable into which symbols will be adjoined to trace that forms have actually been evaluated.
-
-   See `SET-FLAG'.")
-
-(defun set-flag (name)
-  (setf *flags* (adjoin name *flags*)))
-
-(defun flag-set-p (name)
-  (find name *flags*))
-
-(defun clear-flags ()
-  (setf *flags* '()))
-
-
 (defun reset-all-state ()
   (reset-test-definitions)
   (clear-flags))
 
-(defun explain (message)
-  (format t "~&  ~a~%" message))
 
-(defmacro trace-expr (expr)
-  `(format t "~&  ~S => ~S~%" (quote ,expr) ,expr))
-
+;;; * The tests themselves ----------------------------------------------------------------------------------|
 ;;; ** Defining Tests ---------------------------------------------------------------------------------------|
 
 (deftest-local defining-tests ()
