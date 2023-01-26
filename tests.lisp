@@ -31,20 +31,20 @@
    :common-lisp
    :de.m-e-leypold.cl-simple-test
    :de.m-e-leypold.cl-simple-utils)
-  
+
   (:import-from
    :de.m-e-leypold.cl-simple-utils/basic-test
    :assert! :run-tests! :deftest!
    :set-flag :clear-flags :*flags*
    :explain :trace-expr
    :test-failure)
-  
+
   (:export
    :run-tests!
    :defining-tests
    :running-tests
    :failing-assertions-in-tests
-   :failing-assertions-during-run-tests   
+   :failing-assertions-during-run-tests
    ))
 
 (in-package :de.m-e-leypold.cl-simple-test/tests)
@@ -296,7 +296,7 @@
   (explain "RUN-TESTS again with *DROP-into-debugger*, restarting with NEXT-TEST")
 
   (let ((handler-invocations 0)
-	(failed '()))   
+	(failed '()))
     (handler-bind
 	((error #'(lambda (c)
 		    (declare (ignorable c))
