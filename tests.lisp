@@ -30,10 +30,15 @@
   (:use
    :common-lisp
    :de.m-e-leypold.cl-simple-test
-   :de.m-e-leypold.cl-simple-utils
-   :de.m-e-leypold.cl-simple-utils/basic-test)   
+   :de.m-e-leypold.cl-simple-utils)
+  (:import-from
+   :de.m-e-leypold.cl-simple-utils/basic-test
+   :assert! :run-tests! :deftest!
+   :set-flag :clear-flags :*flags*
+   :explain :trace-expr
+   :test-failure)
   (:export
-   :run-tests-local
+   :run-tests!
    :defining-tests
    :running-tests
    :failing-assertions-in-tests
@@ -55,7 +60,7 @@
 ;;; * The tests themselves ----------------------------------------------------------------------------------|
 ;;; ** Defining Tests ---------------------------------------------------------------------------------------|
 
-(deftest-local defining-tests ()
+(deftest! defining-tests ()
   "Checking `DEFTEST' -- defines tests.
 
      Specification:
@@ -85,19 +90,19 @@
     (format t "~&  t2 here.~&")
     (set-flag *current-test*))
 
-  (assert-local (equal *tests* '(t2 t1)))
+  (assert! (equal *tests* '(t2 t1)))
 
   (explain "Executing tests t2, t1.")
   (t2)
   (t1)
 
   (trace-expr *flags*)
-  (assert-local (equal *flags* '(t1 t2)))
+  (assert! (equal *flags* '(t1 t2)))
 
   (explain "Checking docstrings.")
 
-  (assert-local (equal "t1 doc" (documentation 't1 'function)))
-  (assert-local (equal "t2 doc" (documentation 't2 'function)))
+  (assert! (equal "t1 doc" (documentation 't1 'function)))
+  (assert! (equal "t2 doc" (documentation 't2 'function)))
 
   (handler-case
 
@@ -117,7 +122,7 @@
 
 ;;; ** Running tests ----------------------------------------------------------------------------------------|
 
-(deftest-local running-tests ()
+(deftest! running-tests ()
     "
     Checking: `RUN-TESTS' runs tests in order of their definition.
 
@@ -159,7 +164,7 @@
 ;;; ** Assertion  handling ----------------------------------------------------------------------------------|
 ;;; *** Errors are not handled in the test procedures -------------------------------------------------------|
 
-(deftest-local failing-assertions-in-tests ()
+(deftest! failing-assertions-in-tests ()
     "Checking: Errors raised by assertions in tests escape the test functions.
 
      Context: `ASSERT' signals a `CONDITION' of type `SIMPLE-ERROR' if the predicate given is not true.
@@ -194,7 +199,7 @@
 
 ;;; *** Error handling by `RUN-TESTS' -----------------------------------------------------------------------|
 
-(deftest-local failing-assertions-during-run-tests ()
+(deftest! failing-assertions-during-run-tests ()
     "Checks `RUN-TESTS': Executing the tests; signalled errors count as failed.
 
      `RUN-TESTS' executes tests.
@@ -263,7 +268,7 @@
 	(trace-expr message)
 
 	(explain "Resulting error message must be a test summary.")
-	(assert-local (cl-ppcre:scan "^#<SIMPLE-ERROR.*2 of 4 tests failed: [(]T2 T4[)][.].*[>]" message))))
+	(assert! (cl-ppcre:scan "^#<SIMPLE-ERROR.*2 of 4 tests failed: [(]T2 T4[)][.].*[>]" message))))
 
     (condition (e)
 	       (test-failure
@@ -275,8 +280,8 @@
       (test-failure
        :explanation "No error signalled by `RUN-TEST', but it should have.")))
 
-    (assert-local (equal *FAILED* '(T4 T2)))
-    (assert-local (equal *PASSED* '(T3 T1)))
+    (assert! (equal *FAILED* '(T4 T2)))
+    (assert! (equal *PASSED* '(T3 T1)))
 
   (explain "RUN-TESTS again with *SIGNAL-AFTER-RUN-TESTS* off")
 
@@ -284,12 +289,12 @@
 	 (failed (run-tests)))
 
     (trace-expr failed)
-    (assert-local (equal failed '(T2 T4))))
+    (assert! (equal failed '(T2 T4))))
 
   (explain "RUN-TESTS again with *DROP-into-debugger*, restarting with NEXT-TEST")
 
   (let ((handler-invocations 0)
-	(failed '()))
+	(failed '()))   
     (handler-bind
 	((error #'(lambda (c)
 		    (declare (ignorable c))
@@ -307,10 +312,10 @@
 	    (*signal-after-run-tests* nil))
 	(setf failed (run-tests))))
 
-    (assert-local (equal failed '(T2 T4)))
-    (assert-local (= 2 handler-invocations))
-    (assert-local (equal *passed* '(T3 T1)))
-    (assert-local (equal *failed* '(T4 T2))))
+    (assert! (equal failed '(T2 T4)))
+    (assert! (= 2 handler-invocations))
+    (assert! (equal *passed* '(T3 T1)))
+    (assert! (equal *failed* '(T4 T2))))
 
   (explain "RUN-TESTS again with *DROP-into-debugger*, restarting with ABORT-TESTS")
 
@@ -331,10 +336,10 @@
 	     (*signal-after-run-tests* nil))
 	(setf failed (run-tests))))
 
-    (assert-local (equal failed '(T2)))
-    (assert-local (= 1 handler-invocations))
-    (assert-local (equal *passed* '(T1)))
-    (assert-local (equal *failed* '(T2)))))
+    (assert! (equal failed '(T2)))
+    (assert! (= 1 handler-invocations))
+    (assert! (equal *passed* '(T1)))
+    (assert! (equal *failed* '(T2)))))
 
 
 ;;; * -------------------------------------------------------------------------------------------------------|

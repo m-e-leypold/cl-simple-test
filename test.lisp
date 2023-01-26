@@ -23,7 +23,7 @@
 
 (declaim (optimize (speed 0) (space 0) (compilation-speed 0) (debug 3) (safety 3)))
 
-;;; * Load system to be tested & the tests ------------------------------------------------------------------------------|
+;;; * Load system to be tested & the tests ------------------------------------------------------------------|
 
 (asdf:load-system "de.m-e-leypold.cl-simple-test/tests")
 
@@ -39,7 +39,7 @@
 
 ;;; * Actually executing the tests --------------------------------------------------------------------------|
 
-(run-tests-local)
+(run-tests!)
 
 ;;; * -------------------------------------------------------------------------------------------------------|
 ;;; WRT the outline-* and comment-* variables, see the comment in test.lisp
