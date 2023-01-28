@@ -30,7 +30,8 @@
   (:use
    :common-lisp
    :de.m-e-leypold.cl-simple-test
-   :de.m-e-leypold.cl-simple-utils)
+   :de.m-e-leypold.cl-simple-utils
+   :de.m-e-leypold.cl-simple-utils/wrapped-streams)
 
   (:import-from
    :de.m-e-leypold.cl-simple-utils/basic-test
@@ -58,6 +59,10 @@
   (reset-test-definitions)
   (clear-flags))
 
+
+(defun run-tests* ()
+  (with-maybe-indented-output (:prefix "   | ")
+    (run-tests)))
 
 ;;; * The tests themselves ----------------------------------------------------------------------------------|
 ;;; ** Defining Tests ---------------------------------------------------------------------------------------|
@@ -140,14 +145,14 @@
   (explain "Resetting cl-simple-test.")
   (reset-all-state)
 
-  (explain "Defining some tests (T1-4) that register their execution by setting flags. Some fail (T2, T4).")
+  (explain "Defining some tests (T1-3) that register their execution by setting flags. None fail.")
 
   (deftest t1 ()
       "t1 executes without failure"
     (set-flag 't1))
 
   (deftest t2 ()
-      "t2 has a failing assertion"
+      "t2 executes without failure"
     (set-flag 't2))
 
   (deftest t3 ()
@@ -155,7 +160,7 @@
     (set-flag 't3))
 
   (handler-case
-      (run-tests)
+      (run-tests*)
     (condition (c) (test-failure :explanation
 				 (format nil "RUN-TESTS signalled ~S, but should not have" (type-of c)))))
   (assert (equal *failed* '()))
@@ -262,7 +267,7 @@
   (explain "Running the defined tests.")
 
   (handler-case
-      (run-tests)
+      (run-tests*)
 
     (error (e)
       (let ((message
@@ -288,7 +293,7 @@
   (explain "RUN-TESTS again with *SIGNAL-AFTER-RUN-TESTS* off")
 
   (let* ((*signal-after-run-tests* nil)
-	 (failed (run-tests)))
+	 (failed (run-tests*)))
 
     (trace-expr failed)
     (assert! (equal failed '(T2 T4))))
@@ -312,7 +317,7 @@
 
       (let ((*drop-into-debugger* t)
 	    (*signal-after-run-tests* nil))
-	(setf failed (run-tests))))
+	(setf failed (run-tests*))))
 
     (assert! (equal failed '(T2 T4)))
     (assert! (= 2 handler-invocations))
@@ -336,7 +341,7 @@
 
       (let ((*drop-into-debugger* t)
 	     (*signal-after-run-tests* nil))
-	(setf failed (run-tests))))
+	(setf failed (run-tests*))))
 
     (assert! (equal failed '(T2)))
     (assert! (= 1 handler-invocations))
