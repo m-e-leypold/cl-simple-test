@@ -24,7 +24,7 @@
   :author "M E Leypold [elegant-weapons ( AT) m-e-leypold (DOT) de]"
   :licence "GPL3"
   :description "Simple assertion based testing"
-  :depends-on ("cl-ppcre")
+  :depends-on ("cl-ppcre" "de.m-e-leypold.cl-simple-utils")
   :components ((:file "simple-test")))
 
 

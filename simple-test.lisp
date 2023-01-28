@@ -28,8 +28,33 @@
 ;;; * -- Package definition ---------------------------------------------------------------------------------|
 
 (defpackage :de.m-e-leypold.cl-simple-test
-  (:documentation "A simple test framework working with ```ASSERT'''")
+  (:documentation "
+   A simple test framework working with `ASSERT'.
+
+   Define tests with `DEFTEST'. `*TESTS*' will contain the all defined tests as a list of
+   symbols.
+
+   Assert expectations in the test bodies with
+    - `CL:ASSERT': Given expression must evaluate to true.
+    - `ASSERT-CONDITION': Body must signal given condition type.
+    - `ASSERT-NO-CONDITION': Body must not signal any condition.
+    - `ASSERT-AND-CAPTURE-CONDITION': Body must signal given condiation type and the
+       instance will be captured in a variable.
+
+   Execute all defined tests with `RUN-TESTS'. Failing tests will be recorded in `*FAILED*',
+   passing tests in `*PASSED*'.
+
+   (to be continued)
+
+   TODO: (load-tests); TEST::DIRECTORY
+
+   (to be continued)
+
+   ")
+  
   (:use :common-lisp :cl-ppcre)
+  (:import-from :de.m-e-leypold.cl-simple-utils
+   :defpackage-doc)
   (:export
    :assert-condition
    :assert-no-condition
@@ -63,6 +88,8 @@
    ))
 
 (in-package :de.m-e-leypold.cl-simple-test)
+(defpackage-doc)
+
 
 ;;; * -- Development infrastructure -------------------------------------------------------------------------|
 
@@ -91,7 +118,10 @@
 
    Specification: `TEST:DEFINING-TESTS', `TEST:FAILING-ASSERTIONS-IN-TESTS'.
                   Execute (load-tests) before or load test.lisp.
+
+   See also: `DOC'.
 "
+  
   (assert (not args) nil
 	  (format nil
 		  "Argument list in DEFTEST ~S not empty, but ~S. Must be empty when using ~a."
@@ -113,23 +143,23 @@
 ;;; * -- Running tests --------------------------------------------------------------------------------------|
 
 (defparameter *failed* '()
-  "Contains the failed tests after running the tests with ```RUN-TESTS'''")
+  "Contains the failed tests after executing tests with `RUN-TESTS'.")
 
 (defparameter *passed* '()
-  "Contains the passed tests after running the tests with ```RUN-TESTS'''")
+  "Contains the passed tests after executing tests with `RUN-TESTS'.")
 
 (defvar *drop-into-debugger* nil
   "
-  If T, ```RUN-TEST''' will let a failing test drop into the debugger, otherwise
-  the condition will be handeled after printing the error message and the tests
-  will continue.
+  If T, `RUN-TEST' will let a failing test drop into the debugger, otherwise the condition will
+  be handled after printing the error message and the tests will continue.
 
-  The default is NIL, i.e. not to drop into debugger. This mode is geared towards batch testing.
+  The default is NIL, i.e. not to drop into debugger. This mode is geared towards batch
+  testing.
 ")
 
 (defvar *signal-after-run-tests* T
   "
-  Wether to signal an `ERROR' at the end of `RUN-TEST' if any of the tests failed.
+  Whether to signal an `ERROR' at the end of `RUN-TEST' if any of the tests failed.
 
   The default is T (yes, signal).
 "
