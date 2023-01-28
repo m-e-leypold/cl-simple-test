@@ -46,12 +46,15 @@
 
    (to be continued)
 
-   TODO: (load-tests); TEST::DIRECTORY
+   Please refert to the documentation of above symbols for further information.
 
-   (to be continued)
+   The tests in package DE.M-E-LEYPOLD.CL-SIMPLE-TEST/TESTS also serve as a more detailed
+   specification. See `DE.M-E-LEYPOLD.CL-SIMPLE-TEST/TESTS::*REGISTRY*' for an overview.
 
+   You will have either to run the tests or execute (load-tests) before the test symbols become
+   available in your lisp instance.
    ")
-  
+
   (:use :common-lisp :cl-ppcre)
   (:import-from :de.m-e-leypold.cl-simple-utils
    :defpackage-doc)
@@ -88,7 +91,7 @@
    ))
 
 (in-package :de.m-e-leypold.cl-simple-test)
-(defpackage-doc)
+(defpackage-doc doc)
 
 
 ;;; * -- Development infrastructure -------------------------------------------------------------------------|
@@ -121,7 +124,7 @@
 
    See also: `DOC'.
 "
-  
+
   (assert (not args) nil
 	  (format nil
 		  "Argument list in DEFTEST ~S not empty, but ~S. Must be empty when using ~a."
@@ -210,7 +213,7 @@
 
   - '*SIGNAL-AFTER-RUN-TESTS*' -- Signal an error at the end of `RUN-TESTS' if any tests
      failed. This is the default.
-    
+
 
   Specification: `TEST:RUNNING-TESTS', `TEST:FAILING-ASSERTIONS-DURING-RUN-TESTS'.
                  Execute (load-tests) before or load test.lisp.

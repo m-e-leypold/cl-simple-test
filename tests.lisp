@@ -36,6 +36,8 @@
   (:import-from
    :de.m-e-leypold.cl-simple-utils/basic-test
    :assert! :run-tests! :deftest!
+   :deftest-registry!
+   :end-test-registry!
    :set-flag :clear-flags :*flags*
    :explain :trace-expr
    :test-failure)
@@ -54,6 +56,8 @@
 			       :de.m-e-leypold.cl-simple-test/tests
 			       :de.m-e-leypold.cl-simple-test)
 
+
+(deftest-registry!)
 
 (defun reset-all-state ()
   (reset-test-definitions)
@@ -348,6 +352,10 @@
     (assert! (equal *passed* '(T1)))
     (assert! (equal *failed* '(T2)))))
 
+
+;;; * Package epilog ----------------------------------------------------------------------------------------|
+
+(end-test-registry!)
 
 ;;; * -------------------------------------------------------------------------------------------------------|
 ;;;   WRT the outline-* and comment-* variables, see the comment in test.lisp
