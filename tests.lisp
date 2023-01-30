@@ -72,19 +72,20 @@
 ;;; ** Defining Tests ---------------------------------------------------------------------------------------|
 
 (deftest! defining-tests ()
-  "Checking `DEFTEST' -- defines tests.
+    "
+    `DEFTEST' defines tests.
 
-     Specification:
+    Specification:
 
-     1. (DEFTEST F () ...) will define a test of name F. Symbol F will be pushed to *TESTS* (to be available
-        for use by `RUN-TEST').
+    1. (DEFTEST F () ...) will define a test of name F. Symbol F will be pushed to *TESTS* (to be available
+       for use by `RUN-TEST').
 
-     2. A function of the same name F will will be defined, containing the body given in DEFTEST and wrapped
-        into a form, so that during execution of F, `*CURRENT-TEST*' is set to F.
+    2. A function of the same name F will will be defined, containing the body given in DEFTEST and wrapped
+       into a form, so that during execution of F, `*CURRENT-TEST*' is set to F.
 
-     3. The documentation string is obligatory and will be attached to the function.
+    3. The documentation string is obligatory and will be attached to the function.
 
-     If there is no documentation string given, this will result in an error at macro expansion time.
+    If there is no documentation string given, this will result in an error at macro expansion time.
 "
   (explain "Resetting cl-simple-test.")
   (reset-all-state)
@@ -135,7 +136,7 @@
 
 (deftest! running-tests ()
     "
-    Checking: `RUN-TESTS' runs tests in order of their definition.
+    `RUN-TESTS' runs tests in order of their definition; no signal means success.
 
     If no condition is signalled:
 
@@ -176,14 +177,14 @@
 ;;; *** Errors are not handled in the test procedures -------------------------------------------------------|
 
 (deftest! failing-assertions-in-tests ()
-    "Checking: Errors raised by assertions in tests escape the test functions.
+    "
+    Errors signaled by assertions in tests escape the test functions.
 
-     Context: `ASSERT' signals a `CONDITION' of type `SIMPLE-ERROR' if the predicate given is not true.
+    Context: `ASSERT' signals a `CONDITION' of type `SIMPLE-ERROR' if the predicate given is not true.
 
-     Specification: When invoking a test function directly, such a `SIMPLE-ERROR' will not be handled by the
-     test function, but escape from the test function.
+    Specification: When invoking a test function directly, such a `SIMPLE-ERROR' will not be handled by the
+    test function, but escape from the test function.
 "
-
   (explain "Resetting cl-simple-test.")
   (reset-all-state)
 
@@ -211,36 +212,37 @@
 ;;; *** Error handling by `RUN-TESTS' -----------------------------------------------------------------------|
 
 (deftest! failing-assertions-during-run-tests ()
-    "Checks `RUN-TESTS': Executing the tests; signalled errors count as failed.
+    "
+    `RUN-TESTS' executes defined tests; signalled errors count as failed.
 
-     `RUN-TESTS' executes tests.
+    `RUN-TESTS' executes tests.
 
-     1. In order of their definition.
-     2. Tests that execute without signalling will be counted as passed and registered in `*PASSED*' (as
-        symbol).
-     3. Tests that signal an error (as from a failing assertion) are counted as failed and registered in
-        `*FAILED*'.
-     4. Signalled conditions different from `ERROR' just escape the tests.
+    1. In order of their definition.
+    2. Tests that execute without signalling will be counted as passed and registered in `*PASSED*' (as
+       symbol).
+    3. Tests that signal an error (as from a failing assertion) are counted as failed and registered in
+       `*FAILED*'.
+    4. Signalled conditions different from `ERROR' just escape the tests.
 
-     5. After running all tests, if any tests failed, `RUN-TESTS' will signal an error with a message like
-        \"#<SIMPLE-ERROR \"2 of 4 tests failed: (T2 T4).\" {1004CC4EA3}>\"
+    5. After running all tests, if any tests failed, `RUN-TESTS' will signal an error with a message like
+       \"#<SIMPLE-ERROR \"2 of 4 tests failed: (T2 T4).\" {1004CC4EA3}>\"
 
-     This is the default behaviour: To just continue running tests and signal an error at the end if any
-     failed.
+    This is the default behaviour: To just continue running tests and signal an error at the end if any
+    failed.
 
-     Some variables allow to modify this behaviour:
+    Some variables allow to modify this behaviour:
 
-     6. If `*SIGNAL-AFTER-RUN-TESTS*' is NIL, no error according to (5) will be signalled at the end of
-        `RUN-TESTS'. Instead `RUN-TESTS' will just return the list of failed tests (in order of their
-        execution).
+    6. If `*SIGNAL-AFTER-RUN-TESTS*' is NIL, no error according to (5) will be signalled at the end of
+       `RUN-TESTS'. Instead `RUN-TESTS' will just return the list of failed tests (in order of their
+       execution).
 
-     7. When setting *DROP-INTO-DEBUGGER*, `ERROR' signals escape `RUN-TEST' and are not handled internally.
+    7. When setting *DROP-INTO-DEBUGGER*, `ERROR' signals escape `RUN-TEST' and are not handled internally.
 
-     8. When signalling, a restart `NEXT-TEST' is available to continue with the next test (either by a
-        handler or interactively in the debugger.
+    8. When signalling, a restart `NEXT-TEST' is available to continue with the next test (either by a
+       handler or interactively in the debugger.
 
-     9. When signalling, a restart `ABORT-TEST' is available to abort testing, but still evaluate
-        whether tests failed and process failures according to (5).
+    9. When signalling, a restart `ABORT-TEST' is available to abort testing, but still evaluate
+       whether tests failed and process failures according to (5).
 "
 
   (explain "Resetting cl-simple-test.")

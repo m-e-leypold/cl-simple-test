@@ -18,6 +18,8 @@
 ;;;
 ;;;   For altermative licensing options, see README.md
 ;;;
+;;;   For user and technical documentation start with the documentatin string of Symbol
+;;;   `de.m-e-leypold.cl-simple-test::DOC'.
 ;;;
 ;;; * -- Options --------------------------------------------------------------------------------------------|
 ;;;
@@ -29,35 +31,79 @@
 
 (defpackage :de.m-e-leypold.cl-simple-test
   (:documentation "
-   A simple test framework working with `ASSERT'.
+
+   A simple test framework working with variations of `ASSERT'.
 
    Define tests with `DEFTEST'. `*TESTS*' will contain the all defined tests as a list of
    symbols.
 
    Assert expectations in the test bodies with
-    - `CL:ASSERT': Given expression must evaluate to true.
-    - `ASSERT-CONDITION': Body must signal given condition type.
-    - `ASSERT-NO-CONDITION': Body must not signal any condition.
-    - `ASSERT-AND-CAPTURE-CONDITION': Body must signal given condiation type and the
-       instance will be captured in a variable.
+
+   - `CL:ASSERT': Given expression must evaluate to true.
+   - `ASSERT-CONDITION': Body must signal given condition type.
+   - `ASSERT-NO-CONDITION': Body must not signal any condition.
+   - `ASSERT-AND-CAPTURE-CONDITION': Body must signal given condition type and the
+      instance will be captured in a variable.
 
    Execute all defined tests with `RUN-TESTS'. Failing tests will be recorded in `*FAILED*',
    passing tests in `*PASSED*'.
 
+   At test run-time `*CURRENT-TEST*' always contains the symbol of the test that is executed at
+   the moment. `*TESTS*' contains the symbols of all currently defined tests which might prove
+   useful for creating a test summary report.
+
    (to be continued)
 
-   Please refert to the documentation of above symbols for further information.
+   Two parameters influence test execution:
+
+   - `*DROP-INTO-DEBUGGER*' (default: nil) -- Drop into the debugger when a test fails. This is
+     useful for stopping at once at the failing test and of course have a chance to debug what
+     goes wrong.
+
+   - `*SIGNAL-AFTER-RUN-TESTS*' (default: T) -- After all tests have run, signal if any test
+     failed (if `*FAILED*' is not empty). This is useful in batch mode to get a process exit
+     code that indicates that s.th. failed. The backtrace in turn is not very useful in this
+     case.
+
+   The default setup would be typical for a batch run where we want to run all tests and just
+   fail or pass at the end, e.g. for running tests in a CI pipeline.
+
+   The setup (SETF *DROP-INTO-DEBUGGER* T) would be typical for a test or interactive batch run
+   where all we want to stop at the first failing test. This often makes sense in cases where
+   the tests test layers of functionality that build on each other and it does not make sense
+   to continue with later tests if one of the layers fail.
+
+   Mostly for interactive use, two restarts are established by `RUN-TESTS':
+
+   (TODO: defrestart)
+
+   - `NEXT-TEST' -- Continue with the next test in the list.
+   - `ABORT-TESTS' -- Abort testing.
+
+   (to be continued)
+
+   *RESET-RUN-STATE*
+   *RESET-TEST-DEFINITIONS*
+
+   (to be continued)
+
+   example.lisp
+
+   (to be continued)
+
+   Please refer to the documentation of above symbols for further information.
 
    The tests in package DE.M-E-LEYPOLD.CL-SIMPLE-TEST/TESTS also serve as a more detailed
    specification. See `DE.M-E-LEYPOLD.CL-SIMPLE-TEST/TESTS::*REGISTRY*' for an overview.
 
-   You will have either to run the tests or execute (load-tests) before the test symbols become
-   available in your lisp instance.
+   Note: You will have either to run the tests or execute (load-tests) before the test symbols
+   and their documentation become available in your lisp process.
    ")
 
   (:use :common-lisp :cl-ppcre)
   (:import-from :de.m-e-leypold.cl-simple-utils
-   :defpackage-doc)
+   :defpackage-doc
+   :defrestart)
   (:export
    :assert-condition
    :assert-no-condition
@@ -85,7 +131,8 @@
    :*signal-after-run-tests*
    :*drop-into-debugger*
 
-   ;; restarts
+   ;; restart
+   s
    :next-test
    :abort-tests
    ))
@@ -193,6 +240,16 @@
 	  (declare (ignorable prefix))
 	  (if first-line?
 	      (aref first-line? 0))))))
+
+(defrestart next-test ()
+  "
+  Restart to continue with the next test in the list. Established by `RUN-TESTS'.
+")
+
+(defrestart abort-tests ()
+  "
+  Restart to abort testing. Established by `RUN-TESTS'.
+")
 
 (defun run-tests ()
 
