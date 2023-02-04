@@ -27,6 +27,7 @@ TEST-RUNNER     = $(strip $(wildcard test.lisp))
 AUTHOR-ID      ?= m-e-leypold
 GITLAB         ?= git@gitlab.com:$(AUTHOR-ID)/$(SHORT-NAME).git
 GITHUB         ?= git@github.com:$(AUTHOR-ID)/$(SHORT-NAME).git
+ORIGIN         ?= LSD:projects/$(SHORT-NAME).git
 
 $(info PRIMARY-SYSTEM = $(PRIMARY-SYSTEM))
 $(info SHORT-NAME     = $(SHORT-NAME))
@@ -49,15 +50,38 @@ endif
 
 # The procedures below are for the original author of this package.
 
+dev: git-setup Project
+
 git-setup:                          # This are the upstream repositories
 	git remote rm GITLAB || true
-	git remote rm GITHUP || true
+	git remote rm GITHUB || true
 	git remote add GITLAB $(GITLAB)
 	git remote add GITHUB $(GITHUB)
 	git fetch GITLAB
 	git fetch GITHUB
 
-publish: check-all
+Project:
+	git clone -b project --single-branch . Project
+	cd Project && git remote add UPSTREAM $(ORIGIN)
+	cd Project && git fetch UPSTREAM
+	cd Project && git merge UPSTREAM/project
+	cd Project && git push UPSTREAM project
+	cd Project && git push origin project
+
+
+publish: publish-source publish-project 
+
+publish-project:
+	cd Project && git branch | grep '^[*] project$$' # We only release from project
+	cd Project && \
+           if git status -s | cut -c1-2  | grep ' [^ ?]'; \
+	      then git status -s ; false; \
+           else true; \
+        fi
+	cd Project && git push origin project
+	git push
+
+publish-source: check-all
 	git branch | grep '^[*] main$$' # We only release from main
 	if git status -s | cut -c1-2  | grep ' [^ ?]'; \
 	   then git status -s ; false; \
@@ -66,7 +90,6 @@ publish: check-all
 	git push GITLAB main
 	git push GITHUB main
 	git push origin main
-
 
 clean-fasl-cache:
 	rm -rf $(HOME)/.cache/common-lisp
