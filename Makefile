@@ -74,7 +74,7 @@ publish: publish-source publish-project
 publish-project:
 	cd Project && git branch | grep '^[*] project$$' # We only release from project
 	cd Project && \
-           if git status -s | cut -c1-2  | grep ' [^ ?]'; \
+           if git status -s | grep -v '^??'; \
 	      then git status -s ; false; \
            else true; \
         fi
@@ -83,7 +83,7 @@ publish-project:
 
 publish-source: check-all
 	git branch | grep '^[*] main$$' # We only release from main
-	if git status -s | cut -c1-2  | grep ' [^ ?]'; \
+	if git status -s | grep -v '^??'; \
 	   then git status -s ; false; \
            else true; \
         fi
