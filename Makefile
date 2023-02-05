@@ -99,6 +99,7 @@ check-warnings:
 	$(LOAD) >CHECK.log 2>&1
 	! grep -C8 -i "warn" CHECK.log  # This could be smarter
 	@echo
+	@grep compiling CHECK.log
 	@echo "No warnings detected."
 
 stricter-check: clean-fasl-cache check-warnings
