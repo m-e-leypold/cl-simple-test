@@ -4,6 +4,42 @@ CL-SIMPLE-TEST --- very simple assert based testing for common lisp
 This micro framework will mostly be used to bootstrap a more ambitious
 framework (namely cl-test).
 
+Compatibility
+-------------
+
+CL-SIMPLE-TEST is only expected to work on SBLC currently. Since in
+packages it builds upon, there are conditionals that are not
+implemented for other platforms, it would come as a surprise to the
+author(s) if anything worked on any other platform.
+
+Documentation
+-------------
+
+Documentation of this system is available as extensively linked
+documentation strings in the packages themselves. Slime here functions
+as hypertext facility using `C-c C-d C-d` (`slime-describe-symbol`).
+
+In order to read the documentation you need
+
+- emacs
+- load slime and start a lisp REPL (only SBCL works these days)
+- Load "tests.lisp" or "load.lisp" with `C-c C-l`
+  (`slime-load-file`). It is recommended to run the tests at the
+  beginning so you know everything is working with your platform
+  properly.  
+- Then continue with the package documentation string as described below.
+
+In the following block, position the cursor on `-DOC` and run `M-x
+slime-describe-symbol`. This should open a `*slime-description*`
+buffer with the package documentation string from where you can follow
+to the referenced functions and variables.
+
+    (in-package DE.M-E-LEYPOLD.CL-SIMPLE-TEST) ;; This is only for the benefit of SLIME
+    -DOC-                                      ;; M-x slime-describe-symbol on this
+
+At the moment there is no way to export the documentation as text,
+html or pdf.
+
 License and copyright
 ---------------------
 

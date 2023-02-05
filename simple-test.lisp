@@ -32,7 +32,7 @@
 (defpackage :de.m-e-leypold.cl-simple-test
   (:documentation "
 
-   A simple test framework working with variations of `ASSERT'.
+   DE.M-E-LEYPOLD.CL-SIMPLE-TEST is a simple test framework working with variations of `ASSERT'.
 
    Define tests with `DEFTEST'. `*TESTS*' will contain the all defined tests as a list of
    symbols.
@@ -52,44 +52,42 @@
    the moment. `*TESTS*' contains the symbols of all currently defined tests which might prove
    useful for creating a test summary report.
 
-   (to be continued)
-
    Two parameters influence test execution:
 
-   - `*DROP-INTO-DEBUGGER*' (default: nil) -- Drop into the debugger when a test fails. This is
+   - `*DROP-INTO-DEBUGGER*' (default: NIL) -- Drop into the debugger when a test fails. This is
      useful for stopping at once at the failing test and of course have a chance to debug what
      goes wrong.
 
    - `*SIGNAL-AFTER-RUN-TESTS*' (default: T) -- After all tests have run, signal if any test
      failed (if `*FAILED*' is not empty). This is useful in batch mode to get a process exit
-     code that indicates that s.th. failed. The backtrace in turn is not very useful in this
-     case.
+     code that indicates that s.th. failed when `*DROP-INTO-DEBUGGER*' is NIL. The backtrace in
+     turn is not very useful in this case.
 
    The default setup would be typical for a batch run where we want to run all tests and just
    fail or pass at the end, e.g. for running tests in a CI pipeline.
 
-   The setup (SETF *DROP-INTO-DEBUGGER* T) would be typical for a test or interactive batch run
-   where all we want to stop at the first failing test. This often makes sense in cases where
-   the tests test layers of functionality that build on each other and it does not make sense
-   to continue with later tests if one of the layers fail.
+   The setup (SETF *DROP-INTO-DEBUGGER* T) would be typical for an interactive or batch test
+   run where all we want is to stop at the first failing test. This often makes sense in cases
+   where the tests check layers of functionality that build on each other and it does not make
+   sense to continue with later tests if one of the layers fail.
 
    Mostly for interactive use, two restarts are established by `RUN-TESTS':
-
-   (TODO: defrestart)
 
    - `NEXT-TEST' -- Continue with the next test in the list.
    - `ABORT-TESTS' -- Abort testing.
 
-   (to be continued)
+   The following two functions are mostly useful for testing the CL-SIMPLE-TESTS framework
+   itself.
 
-   *RESET-RUN-STATE*
-   *RESET-TEST-DEFINITIONS*
+   - `RESET-TEST-DEFINITIONS' will clear `*TESTS*' with the result that the test definitions
+     are \"forgotten\".
 
-   (to be continued)
+   - `RESET-RUN-STATE' resets the definitions (as above) and clears `*CURRENT-TEST*'.
 
-   example.lisp
-
-   (to be continued)
+   Tests defined with `DEFTEST' are just normal function. They can be run by invoking them
+   explicitely. When doing so, the signal handlers and restarts referenced above will not be be
+   installed while the tests executes. This means any condition signal esacping from the test
+   body will result in the debugger being invoked if `*DEBUGGER-HOOK*' is set.
 
    Please refer to the documentation of above symbols for further information.
 
@@ -132,13 +130,13 @@
    :*drop-into-debugger*
 
    ;; restart
-   s
+
    :next-test
    :abort-tests
    ))
 
 (in-package :de.m-e-leypold.cl-simple-test)
-(defpackage-doc doc)
+(defpackage-doc -doc-)                       ;; -doc- will contain package doc string
 
 
 ;;; * -- Development infrastructure -------------------------------------------------------------------------|
@@ -152,7 +150,10 @@
   "Contains the tests defined with `DEFTEST' (as symbols).")
 
 (defparameter *current-test*  nil
-  "Contains the currently running test as a a symbol")
+  "Contains the currently running test as a a symbol, NIL if no test is running.
+
+   See also: `TEST::DEFINING-TESTS'.
+")
 
 (defmacro deftest (name args doc &body body)
   "Define a test.
@@ -169,7 +170,7 @@
    Specification: `TEST:DEFINING-TESTS', `TEST:FAILING-ASSERTIONS-IN-TESTS'.
                   Execute (load-tests) before or load test.lisp.
 
-   See also: `DOC'.
+   See also: `-DOC-'.
 "
 
   (assert (not args) nil
