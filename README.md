@@ -21,15 +21,15 @@ as hypertext facility using `C-c C-d C-d` (`slime-describe-symbol`).
 
 In order to read the documentation you need
 
-- emacs
-- load slime and start a lisp REPL (only SBCL works these days)
+- Emacs.
+- Load slime and start a lisp REPL (only SBCL works these days).
 - Load "tests.lisp" or "load.lisp" with `C-c C-l`
   (`slime-load-file`). It is recommended to run the tests at the
   beginning so you know everything is working with your platform
   properly.  
 - Then continue with the package documentation string as described below.
 
-In the following block, position the cursor on `-DOC` and run `M-x
+In the following block, position the cursor on `-DOC-` and run `M-x
 slime-describe-symbol`. This should open a `*slime-description*`
 buffer with the package documentation string from where you can follow
 to the referenced functions and variables.
