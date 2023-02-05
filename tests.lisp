@@ -48,6 +48,7 @@
    :running-tests
    :failing-assertions-in-tests
    :failing-assertions-during-run-tests
+   :current-test-maintenance
    ))
 
 (in-package :de.m-e-leypold.cl-simple-test/tests)
@@ -55,7 +56,6 @@
 (inject-package-local-nickname "TEST"
 			       :de.m-e-leypold.cl-simple-test/tests
 			       :de.m-e-leypold.cl-simple-test)
-
 
 (deftest-registry!)
 
@@ -136,7 +136,7 @@
 
 (deftest! current-test-maintenance ()
     "
-    During execution of a test `*CURRENT-TEST*' is set to the symbol of the currently executing test.
+    `*CURRENT-TEST*' is set to the symbol of the currently executing test during execution of a test.
 
     This is also true if the test is not executed under the control of `RUN-TEST' but instead invoked
     directly.
@@ -388,7 +388,6 @@
     (assert! (= 1 handler-invocations))
     (assert! (equal *passed* '(T1)))
     (assert! (equal *failed* '(T2)))))
-
 
 ;;; * Package epilog ----------------------------------------------------------------------------------------|
 

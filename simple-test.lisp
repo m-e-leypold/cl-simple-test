@@ -34,8 +34,16 @@
 
    DE.M-E-LEYPOLD.CL-SIMPLE-TEST is a simple test framework working with variations of `ASSERT'.
 
+
+   Defining Tests
+   --------------
+
    Define tests with `DEFTEST'. `*TESTS*' will contain the all defined tests as a list of
    symbols.
+
+
+   Asserting expectations
+   ----------------------
 
    Assert expectations in the test bodies with
 
@@ -45,12 +53,20 @@
    - `ASSERT-AND-CAPTURE-CONDITION': Body must signal given condition type and the
       instance will be captured in a variable.
 
+
+   Executing test
+   --------------
+
    Execute all defined tests with `RUN-TESTS'. Failing tests will be recorded in `*FAILED*',
    passing tests in `*PASSED*'.
 
    At test run-time `*CURRENT-TEST*' always contains the symbol of the test that is executed at
    the moment. `*TESTS*' contains the symbols of all currently defined tests which might prove
    useful for creating a test summary report.
+
+
+   Parameters
+   ----------
 
    Two parameters influence test execution:
 
@@ -71,10 +87,18 @@
    where the tests check layers of functionality that build on each other and it does not make
    sense to continue with later tests if one of the layers fail.
 
+
+   Restarts during `RUN-TEST'
+   --------------------------
+
    Mostly for interactive use, two restarts are established by `RUN-TESTS':
 
    - `NEXT-TEST' -- Continue with the next test in the list.
    - `ABORT-TESTS' -- Abort testing.
+
+
+   Test resets
+   -----------
 
    The following two functions are mostly useful for testing the CL-SIMPLE-TESTS framework
    itself.
@@ -88,6 +112,10 @@
    explicitely. When doing so, the signal handlers and restarts referenced above will not be be
    installed while the tests executes. This means any condition signal esacping from the test
    body will result in the debugger being invoked if `*DEBUGGER-HOOK*' is set.
+
+
+   Further information
+   -------------------
 
    Please refer to the documentation of above symbols for further information.
 
@@ -150,9 +178,11 @@
   "Contains the tests defined with `DEFTEST' (as symbols).")
 
 (defparameter *current-test*  nil
-  "Contains the currently running test as a a symbol, NIL if no test is running.
+  "
+  Contains the currently running test as a a symbol, NIL if no test is running.
 
-   See also: `TEST::DEFINING-TESTS'.
+  Specification: `TEST::DEFINING-TESTS', `TEST::CURRENT-TEST-MAINTENANCE'.
+       See also: `-DOC-'.
 ")
 
 (defmacro deftest (name args doc &body body)
