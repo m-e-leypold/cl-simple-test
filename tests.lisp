@@ -134,6 +134,41 @@
 
 ;;; ** Running tests ----------------------------------------------------------------------------------------|
 
+(deftest! current-test-maintenance ()
+    "
+    During execution of a test `*CURRENT-TEST*' is set to the symbol of the currently executing test.
+
+    This is also true if the test is not executed under the control of `RUN-TEST' but instead invoked
+    directly.
+"
+  (explain "Resetting cl-simple-test.")
+  (reset-all-state)
+
+  (explain "Defining some tests (T1-3) that register their execution by pushing *CURRENT-TEST* to *FLAGS*.")
+
+  (deftest t1 ()
+      "t1 executes without failure"
+    (set-flag *current-test*))
+
+  (deftest t2 ()
+      "t2 executes without failure"
+    (set-flag *current-test*))
+
+  (deftest t3 ()
+      "t3 executes without failure"
+    (set-flag *current-test*))
+
+  (explain "Executing the tests under control of RUN-TESTS.")
+  (run-tests*)
+  (assert! (equal *flags* '(T3 T2 T1)))
+
+  (explain "Now running T1, T3 by invoking them directly")
+  (clear-flags)
+  (assert! (not *flags*)) ;; sanity check
+  (t1)
+  (t2)
+  (assert! (equal *flags* '(T2 T1))))
+
 (deftest! running-tests ()
     "
     `RUN-TESTS' runs tests in order of their definition; no signal means success.

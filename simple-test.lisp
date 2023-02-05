@@ -287,6 +287,12 @@
   (restart-case
 
       (dolist (test (reverse *tests*))
+
+	;; We set *CURRENT-TEST*, so auxilliary functions like TEST-PASSED can access it during
+	;; loop iteration. Strictly speaking this is not necessary (we could pass TEST
+	;; explcicitely to the auxilliaries) but it make handling of "what test is currently
+	;; executing?" more uniform, also for a possible later integration of reporting hooks.
+
 	(let ((*current-test* test))
 
 	  (format t "---- ~a::~a ----~%" (package-name (symbol-package test)) test)
