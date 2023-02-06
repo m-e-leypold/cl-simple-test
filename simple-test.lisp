@@ -204,16 +204,16 @@
 "
 
   (assert (not args) nil
-	  (format nil
-		  "Argument list in DEFTEST ~S not empty, but ~S. Must be empty when using ~a."
-		  name
-		  args
-		  (package-name (symbol-package 'deftest))))
+          (format nil
+                  "Argument list in DEFTEST ~S not empty, but ~S. Must be empty when using ~a."
+                  name
+                  args
+                  (package-name (symbol-package 'deftest))))
 
   (assert (stringp doc) nil
-	  (format nil
-		  "No docstring in DEFTEST ~S. Docstrings are required."
-		  name))
+          (format nil
+                  "No docstring in DEFTEST ~S. Docstrings are required."
+                  name))
   `(progn
      (setf *tests* (adjoin  (quote ,name) *tests*))
      (defun ,name ()
@@ -266,11 +266,11 @@
   "Extract the first line of the documentation as tagline for logging"
   (let ((docstring (documentation sym 'FUNCTION)))
     (if docstring
-	(multiple-value-bind (prefix first-line?)
-	    (CL-PPCRE:scan-to-strings  "^[\\n ]*([^ \\n].*)" docstring)
-	  (declare (ignorable prefix))
-	  (if first-line?
-	      (aref first-line? 0))))))
+        (multiple-value-bind (prefix first-line?)
+            (CL-PPCRE:scan-to-strings  "^[\\n ]*([^ \\n].*)" docstring)
+          (declare (ignorable prefix))
+          (if first-line?
+              (aref first-line? 0))))))
 
 (defrestart next-test ()
   "
@@ -318,32 +318,32 @@
 
       (dolist (test (reverse *tests*))
 
-	;; We set *CURRENT-TEST*, so auxilliary functions like TEST-PASSED can access it during
-	;; loop iteration. Strictly speaking this is not necessary (we could pass TEST
-	;; explcicitely to the auxilliaries) but it make handling of "what test is currently
-	;; executing?" more uniform, also for a possible later integration of reporting hooks.
+        ;; We set *CURRENT-TEST*, so auxilliary functions like TEST-PASSED can access it during
+        ;; loop iteration. Strictly speaking this is not necessary (we could pass TEST
+        ;; explcicitely to the auxilliaries) but it make handling of "what test is currently
+        ;; executing?" more uniform, also for a possible later integration of reporting hooks.
 
-	(let ((*current-test* test))
+        (let ((*current-test* test))
 
-	  (format t "---- ~a::~a ----~%" (package-name (symbol-package test)) test)
-	  (let ((tagline (first-docline test)))
-	    (if tagline
-		(format t "  ;; ~a~%" tagline)))
+          (format t "---- ~a::~a ----~%" (package-name (symbol-package test)) test)
+          (let ((tagline (first-docline test)))
+            (if tagline
+                (format t "  ;; ~a~%" tagline)))
 
-	  (if *drop-into-debugger*
-	      (progn
-		(restart-case
-		    (progn
-		      (handler-bind
-			  ((error #'test-failed))
-			(apply (symbol-function test) nil))
-		      (test-passed))
-		  (next-test () t)))
-	      (handler-case
-		  (progn
-		    (apply (symbol-function test) nil)
-		    (test-passed))
-		(simple-error (c) (test-failed c))))))
+          (if *drop-into-debugger*
+              (progn
+                (restart-case
+                    (progn
+                      (handler-bind
+                          ((error #'test-failed))
+                        (apply (symbol-function test) nil))
+                      (test-passed))
+                  (next-test () t)))
+              (handler-case
+                  (progn
+                    (apply (symbol-function test) nil)
+                    (test-passed))
+                (simple-error (c) (test-failed c))))))
 
     (abort-tests () t))
 
@@ -351,13 +351,32 @@
 
   (if *failed*
       (progn
-	(format t "FAILED: ~a of ~a tests: ~a~%"
-		(length *failed*) (length *tests*) (reverse *failed*))
-	(if *signal-after-run-tests*
-	    (error (format nil "~a of ~a tests failed: ~a."
-			   (length *failed*) (length *tests*) (reverse *failed*)))))
+        (format t "FAILED: ~a of ~a tests: ~a~%"
+                (length *failed*) (length *tests*) (reverse *failed*))
+        (if *signal-after-run-tests*
+            (error (format nil "~a of ~a tests failed: ~a."
+                           (length *failed*) (length *tests*) (reverse *failed*)))))
       (format t "ALL PASSED (~a tests)~%" (length *tests*)))
   (reverse *failed*))
+
+;;; * -- Assertions -----------------------------------------------------------------------------------------|
+
+(defmacro assert-condition (condition &body body)
+  "
+  Execute BODY, assert that BODY signals condition CONDITION or one derived from CONDITION.
+
+  - Signal `ERROR' if no condition has been raise
+  - Let `ASSERT' signal error if condition type is not as expected.
+
+  Specification: `TEST::ASSERTING-FOR-CONDITIONS'.
+       See also: `-DOC-'.
+"
+  `(handler-case
+       (progn ,@body)
+     (condition (c) (assert (typep c ,condition)))
+     (:no-error (&rest rest)
+       (declare (ignorable rest))
+       (assert nil nil "~a did not signal a condition" (cons 'progn (quote ,body))))))
 
 ;;; * -- Resetting state ------------------------------------------------------------------------------------|
 
