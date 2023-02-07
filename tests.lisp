@@ -50,6 +50,7 @@
    :failing-assertions-during-run-tests
    :current-test-maintenance
    :asserting-for-conditions
+   :asserting-for-no-condition
    ))
 
 (in-package :de.m-e-leypold.cl-simple-test/tests)
@@ -397,18 +398,20 @@
 
 
 (deftest! asserting-for-conditions ()
-  "
-  `ASSERT-CONDITION' checks if a form signal a condition of a specific type.
+    "
+    Testing `ASSERT-CONDITION'.
 
-       (assert-condition <cond>
-          <body>)
+    `ASSERT-CONDITION' checks if a form signal a condition of a specific type.
 
-  will
+	 (assert-condition <cond>
+	    <body>)
 
-  1. Signal `ERROR' if the execution of <body> doesn't signal any condition.
+    will
 
-  2. If it signals a condition, assert that signalled condition is of type <cond> or derived from <cond>.  If
-     it is not, the condition signalled by `ASSERT' will escape the form.
+    1. Signal `ERROR' if the execution of <body> doesn't signal any condition.
+
+    2. If it signals a condition, assert that signalled condition is of type <cond> or derived from <cond>.  If
+       it is not, the condition signalled by `ASSERT' will escape the form.
 "
 
   (explain "Trying with a body that does not signal")
@@ -501,6 +504,70 @@
       (declare (ignorable x))
       (format t "OK, no signal.~%"))))
 
+
+(deftest! asserting-for-no-condition ()
+    "
+    Testing `ASSERT-NO-CONDITION'.
+
+    `ASSERT-NO-CONDITION' checks if a form does not signal a condition.
+
+	 (assert-no-condition <cond>
+	    <body>)
+
+    will
+
+    1. Signal `ERROR' if the execution of <body> does signal any condiotion.
+
+    2. If it does not signal a condition, the ASSERT-NO-CONDITION form will evaluate to the value of BODY.
+"
+
+  (explain "Trying abody that does not signals")
+
+  (handler-case
+
+      (assert-no-condition
+	(progn ))
+
+    (condition (c)
+      (test-failure
+       :explanation
+       (format nil
+ 	       (here-text*
+		 "ASSERT-NO-CONDITION with non-signalling"
+		 "should not have signalled any condition, instead it signalled ~a~%")
+	       c)))
+
+    (:NO-ERROR (x)
+      (declare (ignorable x))
+      (format t "OK, no signal.~%")))
+
+
+  (explain "Trying a body that signals")
+
+  (handler-case
+
+    (assert-no-condition
+      (signal 'C1))
+
+    (error (c)
+      (format t "OK, got: ~5:i~a~%" c)) ; that's what it the result should be.
+
+    (condition (c)
+      (test-failure
+       :explanation
+       (format nil
+ 	       (here-text*
+		 "ASSERT-CONDITION with body signalling"
+		 "should have signalled an `error' condition, instead it signalled ~S")
+	       c)))
+
+    (:NO-ERROR (x)
+      (declare (ignorable x))
+      (test-failure
+       :explanation (here-text*
+		      "No error signalled by ASSERT-CONDITION with body signalling"))))
+
+  )
 
 ;;; * Package epilog ----------------------------------------------------------------------------------------|
 

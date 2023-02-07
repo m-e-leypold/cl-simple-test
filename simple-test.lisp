@@ -361,6 +361,18 @@
 
 ;;; * -- Assertions -----------------------------------------------------------------------------------------|
 
+(defmacro assert-no-condition (&body body)
+  "
+  Execute BODY, assert that BODY signals no condition.
+
+  Specification: `TEST::ASSERTING-FOR-NO-CONDITION'
+       See also: `-DOC-'.
+"
+  `(handler-case
+       (progn ,@body)
+     (condition (c) (error "~s unexpectedly signaled ~s" (cons 'progn (quote ,body)) c))))
+
+
 (defmacro assert-condition (condition &body body)
   "
   Execute BODY, assert that BODY signals condition CONDITION or one derived from CONDITION.
