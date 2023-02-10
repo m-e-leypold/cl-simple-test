@@ -129,7 +129,9 @@
   (:use :common-lisp :cl-ppcre)
   (:import-from :de.m-e-leypold.cl-simple-utils
    :defpackage-doc
-   :defrestart)
+   :defrestart
+   :with-gensyms
+   )
   (:export
    :assert-condition
    :assert-no-condition
@@ -389,6 +391,35 @@
      (:no-error (&rest rest)
        (declare (ignorable rest))
        (assert nil nil "~a did not signal a condition" (cons 'progn (quote ,body))))))
+
+(defmacro assert-and-capture-condition ((var cond) &body form+body)
+  "
+  Execute a FORM, assert that a condition COND occurs and capture it in VAR, then execute
+  BODY.
+
+  Call as (assert-and-capture-condition (VAR COND) FORM &body BODY).
+
+  Execute FORM, assert that it signals a condition COND or one derived from COND,
+  capture the signalled condition, bind to VAR and execute BODY.
+
+  This makes it possible to check further assertions (in BODY) that depend on the condition
+  instance that has been signalled.
+
+  Specification: `TEST::ASSERTING-AND-CAPTURING-CONDITIONS'.
+       See also: `-DOC-'.
+"
+  (destructuring-bind (form &body body) form+body
+    (with-gensyms (signalled-condition)
+      `(let ((,var nil))
+	 (handler-case
+	     ,form
+	   (condition (,signalled-condition) (setf ,var ,signalled-condition) T)
+	   (:no-error (&rest rest)
+	     (declare (ignore rest))
+	     (error "~a did not signal a condition" (cons 'progn (quote ,body)))))
+	 (assert (typep ,var ,cond))
+	 ,@body))))
+
 
 ;;; * -- Resetting state ------------------------------------------------------------------------------------|
 

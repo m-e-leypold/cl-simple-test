@@ -51,6 +51,7 @@
    :current-test-maintenance
    :asserting-for-conditions
    :asserting-for-no-condition
+   :asserting-and-capturing-conditions
    ))
 
 (in-package :de.m-e-leypold.cl-simple-test/tests)
@@ -401,7 +402,7 @@
     "
     Testing `ASSERT-CONDITION'.
 
-    `ASSERT-CONDITION' checks if a form signal a condition of a specific type.
+    `ASSERT-CONDITION' checks if a form signals a condition of a specific type.
 
 	 (assert-condition <cond>
 	    <body>)
@@ -568,6 +569,126 @@
 		      "No error signalled by ASSERT-CONDITION with body signalling"))))
 
   )
+
+
+(deftest! asserting-and-capturing-conditions ()
+    "
+    Testing `ASSERT-AND-CAPTURE-CONDITION'.
+
+    `ASSERT-AND-CAPTURE-CONDITION' checks if a form signal a condition of a specific type, but also captures
+    the condition in a variable for further checks. The form
+
+	 (assert-condition (VAR CONDITION-TYPE)
+            FORM
+	    BODY)
+
+    will
+
+    1. Create a new variable binding VAR.
+
+    2. Execute FORM.
+
+    3. Signal an `ERROR' if the execution of BODY doesn't signal any condition.
+
+    4. If it signals a condition, assert that signalled condition is of type CONDITION-TYPE or derived from
+       CONDITION-TYPE. If it is not, the condition signalled by `ASSERT' will escape the form.
+
+    5. If it signals a condition this will be captured in VAR.
+
+    6. BODY will be executed, VAR is available in the scope of BODY.
+"
+
+  (explain "Trying with a body that does not signal")
+
+  (handler-case
+      (assert-and-capture-condition (captured-condition 'C1)
+	(progn ))
+
+    (error (c)                           ; that's what it the result should be.
+      (format t "OK, got: ~a~%" c))
+
+    (condition (c)
+      (test-failure
+       :explanation
+       (format nil
+ 	       (here-text*
+		 "ASSERT-CONDITION with non-signalling body should have"
+		 "signalled an `error' condition, instead it signalled ~S")
+	       c)))
+
+    (:NO-ERROR (x)
+      (declare (ignorable x))
+      (test-failure
+       :explanation "No error signalled by ASSERT-CONDITION with non-signalling body")))
+
+  (explain "Trying with a body that signals a different condition")
+
+  (handler-case
+
+      (assert-and-capture-condition (captured-condition 'C1)
+	(signal 'C2))
+
+    (error (c)
+      (format t "OK, got: ~5:i~a~%" c)) ; that's what it the result should be.
+
+    (condition (c)
+      (test-failure
+       :explanation
+       (format nil
+ 	       (here-text*
+		 "ASSERT-CONDITION with body signalling different condition than expected"
+		 "should have signalled an `error' condition, instead it signalled ~S")
+	       c)))
+
+    (:NO-ERROR (x)
+      (declare (ignorable x))
+      (test-failure
+       :explanation (here-text*
+		      "No error signalled by ASSERT-CONDITION with"
+		      "body signalling different condition than expected"))))
+
+  (explain "Trying with a body that signal a condition derived from the specified one")
+
+  (handler-case
+
+      (assert-and-capture-condition (captured 'C1)
+	(signal 'C1+)
+	(format t "Captured: ~S~%" captured)
+	(assert (typep captured 'C1+)))
+
+    (condition (c)
+      (test-failure
+       :explanation
+       (format nil
+ 	       (here-text*
+		 "ASSERT-CONDITION with body signalling a derived condition"
+		 "should not have signalled any condition, instead it signalled ~a~%")
+	       c)))
+
+    (:NO-ERROR (x)
+      (declare (ignorable x))
+      (format t "OK, no signal.~%")))
+
+  (explain "Trying with a body that signals the expected condition")
+
+  (handler-case
+
+      (assert-and-capture-condition (captured 'C1)
+	(signal 'C1))
+
+    (condition (c)
+      (test-failure
+       :explanation
+       (format nil
+ 	       (here-text*
+		 "ASSERT-CONDITION with body signalling a the expected condition"
+		 "should not have signalled any condition, instead it signalled ~a~%")
+	       c)))
+
+    (:NO-ERROR (x)
+      (declare (ignorable x))
+      (format t "OK, no signal.~%"))))
+
 
 ;;; * Package epilog ----------------------------------------------------------------------------------------|
 
