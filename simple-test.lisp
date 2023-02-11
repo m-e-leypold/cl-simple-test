@@ -27,13 +27,15 @@
 
 (declaim (optimize (speed 0) (debug 3) (safety 3)))
 
-;;; * -- Package definition ---------------------------------------------------------------------------------|
+;;; * -- Package definition & documentation -----------------------------------------------------------------|
 
 (defpackage :de.m-e-leypold.cl-simple-test
   (:documentation "
 
    DE.M-E-LEYPOLD.CL-SIMPLE-TEST is a simple test framework working with variations of `ASSERT'.
 
+   Note: You will have either to run the tests or execute (load-tests) before the symbols
+   prefixed with 'TEST::' and their documentation become available in your lisp process.
 
    Defining Tests
    --------------
@@ -106,9 +108,9 @@
    - `RESET-TEST-DEFINITIONS' will clear `*TESTS*' with the result that the test definitions
      are \"forgotten\".
 
-   - `RESET-RUN-STATE' resets the definitions (as above) and clears `*CURRENT-TEST*'.
+   - `RESET-TEST-RUN-STATE' resets the definitions (as above) and clears `*CURRENT-TEST*'.
 
-   Tests defined with `DEFTEST' are just normal function. They can be run by invoking them
+   Tests defined with `DEFTEST' are just normal functions. They can be run by invoking them
    explicitely. When doing so, the signal handlers and restarts referenced above will not be be
    installed while the tests executes. This means any condition signal esacping from the test
    body will result in the debugger being invoked if `*DEBUGGER-HOOK*' is set.
@@ -177,7 +179,16 @@
 ;;; * -- Defining tests -------------------------------------------------------------------------------------|
 
 (defparameter *tests*  '()
-  "Contains the tests defined with `DEFTEST' (as symbols).")
+  "
+  Contains the tests defined with `DEFTEST' (as symbols).
+
+  Symbols of tests are `ADJOIN'ed to this variable when the DEFTEST forms are evaluated. The
+  variable can be cleared by `RESET-TEST-DEFINITION', though this is only of limited
+  usefulness and mostly for testing the framework itself.
+
+  Specification: `TEST::DEFINING-TESTS'.
+       See also: `-DOC-'.
+")
 
 (defparameter *current-test*  nil
   "
@@ -187,30 +198,23 @@
        See also: `-DOC-'.
 ")
 
-(defmacro deftest (name args doc &body body)
+(defmacro deftest (name () doc &body body)
   "Define a test.
 
    Defines a test procedure bound to the symbol NAME and registers it for later execution with
    `RUN-TESTS'.
 
-   The lambda-list ARGS needs to be empty. The rationale that it needs to be given regardless
-   is that this increases the readability. A reader will register immediately that a DEFTEST
-   form defines a procedure.
+
+   The syntax is pretty much that of a `DEFUN`, but the lambda-list needs to be empty. The
+   rationale that it needs to be given regardless is that this increases the readability. A
+   reader will register immediately that a DEFTEST form defines a function, something that can
+   be called.
 
    Every test must have a docstring DOC that describes what is tested in the test and how.
 
    Specification: `TEST:DEFINING-TESTS', `TEST:FAILING-ASSERTIONS-IN-TESTS'.
-                  Execute (load-tests) before or load test.lisp.
-
-   See also: `-DOC-'.
+   See also:      `-DOC-'.
 "
-
-  (assert (not args) nil
-          (format nil
-                  "Argument list in DEFTEST ~S not empty, but ~S. Must be empty when using ~a."
-                  name
-                  args
-                  (package-name (symbol-package 'deftest))))
 
   (assert (stringp doc) nil
           (format nil
@@ -306,9 +310,7 @@
 
 
   Specification: `TEST:RUNNING-TESTS', `TEST:FAILING-ASSERTIONS-DURING-RUN-TESTS'.
-                 Execute (load-tests) before or load test.lisp.
-
-  See also: `TEST:FAILING-ASSERTIONS-IN-TESTS'.
+       See also: `-DOC-', `TEST:FAILING-ASSERTIONS-IN-TESTS'.
   "
 
   (setf *failed* '())
@@ -379,7 +381,7 @@
   "
   Execute BODY, assert that BODY signals condition CONDITION or one derived from CONDITION.
 
-  - Signal `ERROR' if no condition has been raise
+  - Signal `ERROR' if no condition has been raised.
   - Let `ASSERT' signal error if condition type is not as expected.
 
   Specification: `TEST::ASSERTING-FOR-CONDITIONS'.
@@ -424,8 +426,18 @@
 ;;; * -- Resetting state ------------------------------------------------------------------------------------|
 
 (defun reset-test-run-state ()
-  (setf *current-test* nil))
+  "
+  Reset the dynamic state left over from `RUN-TEST'. This is only useful in some tests of the
+  framework itself.
+"
+  (setf *current-test* nil)
+  (setf *failed* nil)
+  (setf *passed* nil))
 
 (defun reset-test-definitions ()
+  "
+  Reset the test definitions.  This is only useful in some tests of the
+  framework itself.
+"
   (reset-test-run-state)
   (setf *tests* '()))

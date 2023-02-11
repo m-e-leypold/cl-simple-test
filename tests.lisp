@@ -75,6 +75,8 @@
 
 (deftest! defining-tests ()
     "
+    Testing `DEFTEST'.
+
     `DEFTEST' defines tests.
 
     Specification:
@@ -138,6 +140,8 @@
 
 (deftest! current-test-maintenance ()
     "
+    Testing the expected maintenace of `*CURRENT-TEST'.
+
     `*CURRENT-TEST*' is set to the symbol of the currently executing test during execution of a test.
 
     This is also true if the test is not executed under the control of `RUN-TEST' but instead invoked
@@ -173,6 +177,8 @@
 
 (deftest! running-tests ()
     "
+    Testing `RUN-TESTS'.
+
     `RUN-TESTS' runs tests in order of their definition; no signal means success.
 
     If no condition is signalled:
@@ -215,6 +221,8 @@
 
 (deftest! failing-assertions-in-tests ()
     "
+    Testing failing assertions in tests.
+
     Errors signaled by assertions in tests escape the test functions.
 
     Context: `ASSERT' signals a `CONDITION' of type `SIMPLE-ERROR' if the predicate given is not true.
@@ -250,6 +258,8 @@
 
 (deftest! failing-assertions-during-run-tests ()
     "
+    Testing tracking and handling of failing assertions (resulting in failed tests) by `RUN-TESTS'.
+
     `RUN-TESTS' executes defined tests; signalled errors count as failed.
 
     `RUN-TESTS' executes tests.
@@ -404,14 +414,14 @@
 
     `ASSERT-CONDITION' checks if a form signals a condition of a specific type.
 
-	 (assert-condition <cond>
-	    <body>)
+	 (assert-condition COND
+	    BODY)
 
     will
 
-    1. Signal `ERROR' if the execution of <body> doesn't signal any condition.
+    1. Signal `ERROR' if the execution of BODY doesn't signal any condition.
 
-    2. If it signals a condition, assert that signalled condition is of type <cond> or derived from <cond>.  If
+    2. If it signals a condition, assert that signalled condition is of type COND or derived from COND.  If
        it is not, the condition signalled by `ASSERT' will escape the form.
 "
 
@@ -485,7 +495,7 @@
       (declare (ignorable x))
       (format t "OK, no signal.~%")))
 
-  (explain "Trying with a body that signals the expected condition")
+  (explain "Trying with a body that signals the expected condition.")
 
   (handler-case
 
@@ -512,17 +522,17 @@
 
     `ASSERT-NO-CONDITION' checks if a form does not signal a condition.
 
-	 (assert-no-condition <cond>
-	    <body>)
+	 (assert-no-condition COND
+	    BODY)
 
     will
 
-    1. Signal `ERROR' if the execution of <body> does signal any condiotion.
+    1. Signal `ERROR' if the execution of BODY does signal any condiotion.
 
     2. If it does not signal a condition, the ASSERT-NO-CONDITION form will evaluate to the value of BODY.
 "
 
-  (explain "Trying abody that does not signals")
+  (explain "Trying a body that does not signal.")
 
   (handler-case
 
