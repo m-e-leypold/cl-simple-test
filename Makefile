@@ -28,6 +28,7 @@ AUTHOR-ID      ?= m-e-leypold
 GITLAB         ?= git@gitlab.com:$(AUTHOR-ID)/$(SHORT-NAME).git
 GITHUB         ?= git@github.com:$(AUTHOR-ID)/$(SHORT-NAME).git
 ORIGIN         ?= LSD:projects/$(SHORT-NAME).git
+MAJOR-VERSIONS ?= 1 2 3 4 5 6 7 8 9 10
 
 $(info PRIMARY-SYSTEM = $(PRIMARY-SYSTEM))
 $(info SHORT-NAME     = $(SHORT-NAME))
@@ -88,8 +89,10 @@ publish-source: check-all
            else true; \
         fi
 	git push GITLAB main
+	git push GITLAB $(MAJOR-VERSIONS:%=refs/tags/%.*)
 	git push GITHUB main
-	git push origin main
+	git push GITHUB $(MAJOR-VERSIONS:%=refs/tags/%.*)
+	git push --tags origin main
 
 clean-fasl-cache:
 	rm -rf $(HOME)/.cache/common-lisp
