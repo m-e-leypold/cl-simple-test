@@ -1,17 +1,17 @@
 #
-#   de.m-e-leypold.cl-simple-utils -- Some utility functions.
+#   de.m-e-leypold.cl-simple-test - Simple test framework
 #   Copyright (C) 2022  M E Leypold
-#   
+#
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
 #   the Free Software Foundation, either version 3 of the License, or
 #   (at your option) any later version.
-#   
+#
 #   This program is distributed in the hope that it will be useful,
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #   GNU General Public License for more details.
-#   
+#
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
@@ -35,7 +35,7 @@ $(info SHORT-NAME     = $(SHORT-NAME))
 $(info TEST-RUNNER    = $(SHORT-NAME))
 
 clean::
-	rm -f *~ *.log *.fasl	
+	rm -f *~ *.log *.fasl
 
 CHECK-PREP = sbcl --noinform --disable-debugger --eval '(asdf:load-system "$(PRIMARY-SYSTEM)/prerequisites")' --quit
 LOAD       = sbcl --noinform --disable-debugger --eval '(asdf:load-system "$(PRIMARY-SYSTEM)/load-all")' --quit
@@ -70,7 +70,7 @@ Project:
 	cd Project && git push origin project
 
 
-publish: publish-source publish-project 
+publish: publish-source publish-project
 
 publish-project:
 	cd Project && git branch | grep '^[*] project$$' # We only release from project
@@ -108,4 +108,3 @@ check-warnings:
 stricter-check: clean-fasl-cache check-warnings
 
 check-all: check stricter-check
-
